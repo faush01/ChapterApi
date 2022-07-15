@@ -15,44 +15,45 @@
                     <td style="" valign="top">
 
                         <div id="table-wrapper" style="position: relative; border: 1px solid black;">
-                            <div id="table-scroll" style="height: 350px; width: 350px; overflow: auto;">
+                            <div id="table-scroll" style="height: 650px; width: 350px; overflow: auto;">
                                 <table id="item_list">
                                 </table>
                             </div>
                         </div>
 
                     </td>
-                    <td valign="top" style="width:100%;">
+                    <td valign="top" style="width:100%;padding-left:20px;">
 
                         <div id="display_item_info">
                         </div>
 
-                        <div id="add_form_div" style="display: none;">
-                            <table>
+                        <input type="hidden" id="add_item_id" />
+                        <table style="width:100%; display: none;" id="chapter_table">
+                            <thead>
                                 <tr>
-                                    <td>Name: <input type="text" id="add_name" /></td>
-                                    <td>
-                                        Type: 
+                                    <th style="text-align: left;">Name</th>
+                                    <th style="text-align: left;">Type</th>
+                                    <th style="text-align: left;">Time</th>
+                                    <th style="text-align: left;"></th>
+                                </tr>
+                                <tr>
+                                    <th style="text-align: left;">
+                                        <input type="text" id="add_name" />
+                                    </th>
+                                    <th style="text-align: left;">
                                         <select id="add_type">
                                             <option value="chapter">Chapter</option>
                                             <option value="intro_start">IntroStart</option>
                                             <option value="intro_end">IntroEnd</option>
                                             <option value="credits_start">CreditsStart</option>
                                         </select>
-                                    </td>
-                                    <td>Time: <input type="text" maxlength="2" size="2" value="00" id="add_hour" />:<input type="text" maxlength="2" size="2" value="00" id="add_minute" />:<input type="text" maxlength="2" size="2" value="00" id="add_second" /></td>
-                                    <td><button id="add_chapter_button">Add</button></td>
-                                </tr>
-                            </table>
-                            <input type="hidden" id="add_item_id" />
-                        </div>
-
-                        <table style="width:100%;">
-                            <thead>
-                                <tr>
-                                    <th style="text-align: left;">Name</th>
-                                    <th style="text-align: left;">Type</th>
-                                    <th style="text-align: left;">Time</th>
+                                    </th>
+                                    <th style="text-align: left;">
+                                        <input type="text" maxlength="2" size="2" value="00" id="add_hour" />:<input type="text" maxlength="2" size="2" value="00" id="add_minute" />:<input type="text" maxlength="2" size="2" value="00" id="add_second" />
+                                    </th>
+                                    <th style="text-align: left;">
+                                        <button id="add_chapter_button">Add</button>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody id="display_chapter_list">

@@ -104,7 +104,7 @@ define(['mainTabsManager'], function (mainTabsManager) {
                 view.querySelector('#add_second').value = "00";
 
                 // show add form
-                var add_form_div = view.querySelector('#add_form_div');
+                var add_form_div = view.querySelector('#chapter_table');
                 if (item_data.ItemType.toUpperCase() === "MOVIE" || item_data.ItemType.toUpperCase() === "EPISODE") {
                     add_form_div.style.display = "block";
                 }
