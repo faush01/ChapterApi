@@ -1,9 +1,9 @@
-﻿<div data-role="page" class="page type-interior pluginConfigurationPage withTabs"
+﻿<div data-role="page" class="page type-interior pluginConfigurationPage"
      data-require="emby-button,emby-select,emby-checkbox,emby-linkbutton,emby-input"
      data-controller="__plugin/chapters.js">
     <div data-role="content">
         <div class="content-primary">
-            <h2>Chapters</h2>
+            <div>Select an item to view or edit its chapters.</div>
 
             <table>
                 <tr><td>Search</td><td><input id="search_text" type="text" /></td></tr>
@@ -27,12 +27,12 @@
                         <div id="display_item_info">
                         </div>
 
-                        <div id="add_form_div">
+                        <div id="add_form_div" style="display: none;">
                             <table>
                                 <tr>
-                                    <td>Name:<input type="text" id="add_name" /></td>
+                                    <td>Name: <input type="text" id="add_name" /></td>
                                     <td>
-                                        Type:
+                                        Type: 
                                         <select id="add_type">
                                             <option value="chapter">Chapter</option>
                                             <option value="intro_start">IntroStart</option>

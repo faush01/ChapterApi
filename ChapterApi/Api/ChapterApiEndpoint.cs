@@ -35,7 +35,7 @@ namespace ChapterApi.Api
 {
     // http://localhost:8096/emby/chapter_api/get_items
     [Route("/chapter_api/get_items", "GET", Summary = "Get a list of items for type and filtered")]
-    //[Authenticated]
+    [Authenticated]
     public class GetItems : IReturn<Object>
     {
         [ApiMember(Name = "filter", Description = "filter string", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -48,7 +48,7 @@ namespace ChapterApi.Api
 
     // http://localhost:8096/emby/chapter_api/get_chapters
     [Route("/chapter_api/get_chapters", "GET", Summary = "Get a list of items for type and filtered")]
-    //[Authenticated]
+    [Authenticated]
     public class GetItemChapters : IReturn<Object>
     {
         [ApiMember(Name = "id", Description = "item id", IsRequired = true, DataType = "int", ParameterType = "query", Verb = "GET")]
@@ -57,7 +57,7 @@ namespace ChapterApi.Api
 
     // http://localhost:8096/emby/chapter_api/get_item_path
     [Route("/chapter_api/get_item_path", "GET", Summary = "Get a list of items for type and filtered")]
-    //[Authenticated]
+    [Authenticated]
     public class GetItemPath : IReturn<Object>
     {
         [ApiMember(Name = "id", Description = "item id", IsRequired = true, DataType = "int", ParameterType = "query", Verb = "GET")]
@@ -66,7 +66,7 @@ namespace ChapterApi.Api
 
     // http://localhost:8096/emby/chapter_api/update_chapters
     [Route("/chapter_api/update_chapters", "GET", Summary = "Updates chapters")]
-    //[Authenticated]
+    [Authenticated]
     public class UpdateChapters : IReturn<Object>
     {
         [ApiMember(Name = "id", Description = "item id", IsRequired = false, DataType = "long", ParameterType = "query", Verb = "GET")]

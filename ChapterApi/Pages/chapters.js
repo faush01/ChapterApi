@@ -154,13 +154,13 @@ define(['mainTabsManager'], function (mainTabsManager) {
                     tr.appendChild(td);
 
                     if (chapter.MarkerType !== "Chapter") {
-                        tr.style.backgroundColor = "#FF777720";
+                        tr.style.backgroundColor = "#FF777730";
                     }
                     else if (row_count % 2 === 0) {
-                        tr.style.backgroundColor = "#77FF7720";
+                        tr.style.backgroundColor = "#77FF7730";
                     }
                     else {
-                        tr.style.backgroundColor = "#7777FF20";
+                        tr.style.backgroundColor = "#7777FF30";
                     }
                     
                     display_chapter_list.appendChild(tr);
@@ -298,7 +298,6 @@ define(['mainTabsManager'], function (mainTabsManager) {
             //        name: 'Chapters'
             //    }
             //];
-
             //mainTabsManager.setTabs(this, 0, tabs);
 
             var add_chapter_button = view.querySelector('#add_chapter_button');
