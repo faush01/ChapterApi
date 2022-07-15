@@ -5,60 +5,85 @@
         <div class="content-primary">
             <div>Select an item to view or edit its chapters.</div>
 
-            <table>
-                <tr><td>Search</td><td><input id="search_text" type="text" /></td></tr>
-                <tr><td>Path</td><td><span id="path_string" style="border: solid 1px; padding: 2px 10px 2px 5px;">\</span></td></tr>
+            <table style="width:100%;">
+                <tr>
+                    <td style="text-align: left; width: 10px;">Search</td>
+                    <td style="text-align: left;"><input id="search_text" type="text" /></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left; width: 10px;">Path</td>
+                    <td style="text-align: left;"><span id="path_string" style="border: solid 1px; padding: 2px 10px 2px 5px;">\</span></td>
+                </tr>
             </table>
 
-            <table>
+            <table style="width:100%;">
                 <tr>
-                    <td style="" valign="top">
+                    <td style="width:33%;" valign="top">
 
                         <div id="table-wrapper" style="position: relative; border: 1px solid black;">
-                            <div id="table-scroll" style="height: 650px; width: 350px; overflow: auto;">
-                                <table id="item_list">
+                            <div id="table-scroll" style="height: 650px; width: 100%; overflow: auto;">
+                                <table id="item_list" style="table-layout: fixed; width:100%;">
                                 </table>
                             </div>
                         </div>
 
                     </td>
-                    <td valign="top" style="width:100%;padding-left:20px;">
+                    <td style="width:66%; padding-left:20px;" valign="top" >
 
                         <div id="display_item_info">
                         </div>
 
-                        <input type="hidden" id="add_item_id" />
-                        <table style="width:100%; display: none;" id="chapter_table">
-                            <thead>
-                                <tr>
-                                    <th style="text-align: left;">Name</th>
-                                    <th style="text-align: left;">Type</th>
-                                    <th style="text-align: left;">Time</th>
-                                    <th style="text-align: left;"></th>
-                                </tr>
-                                <tr>
-                                    <th style="text-align: left;">
-                                        <input type="text" id="add_name" />
-                                    </th>
-                                    <th style="text-align: left;">
-                                        <select id="add_type">
-                                            <option value="chapter">Chapter</option>
-                                            <option value="intro_start">IntroStart</option>
-                                            <option value="intro_end">IntroEnd</option>
-                                            <option value="credits_start">CreditsStart</option>
-                                        </select>
-                                    </th>
-                                    <th style="text-align: left;">
-                                        <input type="text" maxlength="2" size="2" value="00" id="add_hour" />:<input type="text" maxlength="2" size="2" value="00" id="add_minute" />:<input type="text" maxlength="2" size="2" value="00" id="add_second" />
-                                    </th>
-                                    <th style="text-align: left;">
-                                        <button id="add_chapter_button">Add</button>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody id="display_chapter_list">
-                            </tbody>
-                        </table>
+                        <div style="display: none;" id="chapter_table">
+                            <h4>Chapter List</h4>
+                            <input type="hidden" id="add_item_id" />
+                            <table style="table-layout: fixed; width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left;">Name</th>
+                                        <th style="text-align: left;">Type</th>
+                                        <th style="text-align: left;">Time</th>
+                                        <th style="text-align: left; width: 80px;"></th>
+                                    </tr>
+                                    <tr>
+                                        <th style="text-align: left;">
+                                            <input type="text" id="add_name" />
+                                        </th>
+                                        <th style="text-align: left;">
+                                            <select id="add_type">
+                                                <option value="chapter">Chapter</option>
+                                                <option value="intro_start">IntroStart</option>
+                                                <option value="intro_end">IntroEnd</option>
+                                                <option value="credits_start">CreditsStart</option>
+                                            </select>
+                                        </th>
+                                        <th style="text-align: left;">
+                                            <input type="text" maxlength="2" size="2" value="00" id="add_hour" />:<input type="text" maxlength="2" size="2" value="00" id="add_minute" />:<input type="text" maxlength="2" size="2" value="00" id="add_second" />
+                                        </th>
+                                        <th style="text-align: center;">
+                                            <button id="add_chapter_button">Add</button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="display_chapter_list">
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div style="display: none;" id="episodes_table">
+                            <h4>Season Intro Summary</h4>
+                            <table style="table-layout: fixed; width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left;">Name</th>
+                                        <th style="text-align: left; width: 85px;">IntroStart</th>
+                                        <th style="text-align: left; width: 85px;">IntroEnd</th>
+                                        <th style="text-align: left; width: 85px;">Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="display_episode_list">
+                                </tbody>
+                            </table>
+                        </div>
 
                     </td>
                 </tr>

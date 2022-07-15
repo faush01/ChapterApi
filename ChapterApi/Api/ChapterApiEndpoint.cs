@@ -16,6 +16,7 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Net;
@@ -322,19 +323,8 @@ namespace ChapterApi.Api
             return items;
         }
 
-        public object Get(GetItemChapters request)
+        private List<Dictionary<string, object>> GetItemChapters(BaseItem item)
         {
-            Guid item_guid = _libraryManager.GetGuid(request.id);
-            BaseItem item = _libraryManager.GetItemById(item_guid);
-
-            Dictionary<string, object> responce_data = new Dictionary<string, object>();
-
-            Dictionary<string, object> item_info = new Dictionary<string, object>();
-            item_info.Add("Id", item.InternalId);
-            item_info.Add("Name", item.Name);
-            item_info.Add("ItemType", item.GetType().Name);
-            responce_data.Add("item_info", item_info);
-
             List<ChapterInfo> chapters = _ir.GetChapters(item);
             List<Dictionary<string, object>> chapter_list = new List<Dictionary<string, object>>();
             int chap_index = 0;
@@ -353,7 +343,83 @@ namespace ChapterApi.Api
                 chapter_list.Add(chap_info);
                 chap_index++;
             }
-            responce_data.Add("chapters", chapter_list);
+            return chapter_list;
+        }
+
+        private List<Dictionary<string, object>> GetEpisodeIntros(BaseItem season_item)
+        {
+            List<Dictionary<string, object>> episode_list = new List<Dictionary<string, object>>();
+
+            InternalItemsQuery query = new InternalItemsQuery();
+            query.ParentIds = new long[] { season_item.InternalId };
+            query.IncludeItemTypes = new string[] { "Episode" };
+            BaseItem[] results = _libraryManager.GetItemList(query);
+
+            foreach (BaseItem episode in results)
+            {
+                //_logger.Info(item.Name + "(" + item.InternalId + ")");
+                Dictionary<string, object> info = new Dictionary<string, object>();
+                info.Add("Id", episode.InternalId);
+                info.Add("Name", episode.Name);
+                info.Add("ItemType", episode.GetType().Name);
+
+                TimeSpan? intro_start = null;
+                TimeSpan? intro_end = null;
+                List<ChapterInfo> chapters = _ir.GetChapters(episode);
+                foreach(ChapterInfo ci in chapters)
+                {
+                    if(ci.MarkerType == MarkerType.IntroStart && intro_start == null)
+                    {
+                        intro_start = new TimeSpan(ci.StartPositionTicks);
+                    }
+                    else if (ci.MarkerType == MarkerType.IntroEnd && intro_end == null)
+                    {
+                        intro_end = new TimeSpan(ci.StartPositionTicks);
+                    }
+                }
+                if(intro_start != null && intro_end != null)
+                {
+                    TimeSpan duration = intro_end.Value - intro_start.Value;
+                    info.Add("IntroStart", intro_start.Value.ToString(@"hh\:mm\:ss"));
+                    info.Add("IntroEnd", intro_end.Value.ToString(@"hh\:mm\:ss"));
+                    info.Add("IntroSpan", duration.ToString(@"hh\:mm\:ss"));
+                }
+                else
+                {
+                    info.Add("IntroStart", "--:--:--");
+                    info.Add("IntroEnd", "--:--:--");
+                    info.Add("IntroSpan", "--:--:--");
+                }
+
+                episode_list.Add(info);
+            }
+
+            return episode_list;
+        }
+
+        public object Get(GetItemChapters request)
+        {
+            Guid item_guid = _libraryManager.GetGuid(request.id);
+            BaseItem item = _libraryManager.GetItemById(item_guid);
+
+            Dictionary<string, object> responce_data = new Dictionary<string, object>();
+
+            Dictionary<string, object> item_info = new Dictionary<string, object>();
+            item_info.Add("Id", item.InternalId);
+            item_info.Add("Name", item.Name);
+            item_info.Add("ItemType", item.GetType().Name);
+            responce_data.Add("item_info", item_info);
+
+            if (item.GetType() == typeof(Movie) || item.GetType() == typeof(Episode))
+            {
+                List<Dictionary<string, object>> chapter_list = GetItemChapters(item);
+                responce_data.Add("chapters", chapter_list);
+            }
+            else if (item.GetType() == typeof(Season))
+            {
+                List<Dictionary<string, object>> episode_list = GetEpisodeIntros(item);
+                responce_data.Add("episodes", episode_list);
+            }
 
             return responce_data;
         }

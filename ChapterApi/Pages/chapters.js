@@ -75,6 +75,8 @@ define(['mainTabsManager'], function (mainTabsManager) {
     function PopulateChapterInfo(view, item_info) {
         console.log(item_info);
 
+        var cell_padding = "2px 5px 2px 5px";
+
         view.querySelector("#search_text").value = "";
 
         if (item_info !== null) {
@@ -85,6 +87,7 @@ define(['mainTabsManager'], function (mainTabsManager) {
                 console.log("Loaded Chapter Data: " + JSON.stringify(item_chapter_data));
 
                 var chapter_data = item_chapter_data.chapters;
+                var episode_data = item_chapter_data.episodes;
                 var item_data = item_chapter_data.item_info;
 
                 // populate the item info
@@ -103,21 +106,39 @@ define(['mainTabsManager'], function (mainTabsManager) {
                 view.querySelector('#add_minute').value = "00";
                 view.querySelector('#add_second').value = "00";
 
-                // show add form
-                var add_form_div = view.querySelector('#chapter_table');
-                if (item_data.ItemType.toUpperCase() === "MOVIE" || item_data.ItemType.toUpperCase() === "EPISODE") {
-                    add_form_div.style.display = "block";
-                }
-                else {
-                    add_form_div.style.display = "none";
-                }
-
-                // clean and populate the chapters
+                // clean chapters table
                 var display_chapter_list = view.querySelector('#display_chapter_list');
                 while (display_chapter_list.firstChild) {
                     display_chapter_list.removeChild(display_chapter_list.firstChild);
                 }
 
+                // clean episode table
+                var display_episode_list = view.querySelector('#display_episode_list');
+                while (display_episode_list.firstChild) {
+                    display_episode_list.removeChild(display_episode_list.firstChild);
+                }
+
+                // show chapter list
+                var chapter_table = view.querySelector('#chapter_table');
+                if (item_data.ItemType.toUpperCase() === "MOVIE" || item_data.ItemType.toUpperCase() === "EPISODE") {
+                    chapter_table.style.display = "block";
+                }
+                else {
+                    chapter_table.style.display = "none";
+                }
+
+                // show episode list
+                var episodes_table = view.querySelector('#episodes_table');
+                if (item_data.ItemType.toUpperCase() === "SEASON") {
+                    episodes_table.style.display = "block";
+                }
+                else {
+                    episodes_table.style.display = "none";
+                }
+
+                if (chapter_data == null) {
+                    chapter_data = [];
+                }
                 var row_count = 0;
                 for (const chapter of chapter_data) {
                     var tr = document.createElement("tr");
@@ -125,17 +146,22 @@ define(['mainTabsManager'], function (mainTabsManager) {
 
                     td = document.createElement("td");
                     td.appendChild(document.createTextNode(chapter.Name));
+                    td.style.padding = cell_padding;
                     tr.appendChild(td);
 
                     td = document.createElement("td");
                     td.appendChild(document.createTextNode(chapter.MarkerType));
+                    td.style.padding = cell_padding;
                     tr.appendChild(td);
 
                     td = document.createElement("td");
                     td.appendChild(document.createTextNode(chapter.StartTime));
+                    td.style.padding = cell_padding;
                     tr.appendChild(td);
 
                     td = document.createElement("td");
+                    td.style.padding = cell_padding;
+                    td.style.textAlign = "center";
                     var i = document.createElement("i");
                     i.className = "md-icon";
                     i.style.fontSize = "25px";
@@ -150,7 +176,6 @@ define(['mainTabsManager'], function (mainTabsManager) {
                      });
 
                     td.appendChild(i);
-                    td.style.width = "1px";
                     tr.appendChild(td);
 
                     if (chapter.MarkerType !== "Chapter") {
@@ -166,6 +191,53 @@ define(['mainTabsManager'], function (mainTabsManager) {
                     display_chapter_list.appendChild(tr);
 
                     row_count++;
+                }
+
+                if (episode_data == null) {
+                    episode_data = [];
+                }
+                row_count = 0;
+                for (const episode of episode_data) {
+                    var tr = document.createElement("tr");
+                    var td = null;
+
+                    td = document.createElement("td");
+                    td.appendChild(document.createTextNode(episode.Name));
+                    td.style.padding = cell_padding;
+                    td.style.overflow = "hidden";
+                    td.style.whiteSpace = "nowrap";
+                    tr.appendChild(td);
+
+                    td = document.createElement("td");
+                    td.appendChild(document.createTextNode(episode.IntroStart));
+                    td.style.padding = cell_padding;
+                    td.style.overflow = "hidden";
+                    td.style.whiteSpace = "nowrap";
+                    tr.appendChild(td);
+
+                    td = document.createElement("td");
+                    td.appendChild(document.createTextNode(episode.IntroEnd));
+                    td.style.padding = cell_padding;
+                    td.style.overflow = "hidden";
+                    td.style.whiteSpace = "nowrap";
+                    tr.appendChild(td);
+
+                    td = document.createElement("td");
+                    td.appendChild(document.createTextNode(episode.IntroSpan));
+                    td.style.padding = cell_padding;
+                    td.style.overflow = "hidden";
+                    td.style.whiteSpace = "nowrap";
+                    tr.appendChild(td);
+
+                    if (row_count % 2 === 0) {
+                        tr.style.backgroundColor = "#77FF7730";
+                    }
+                    else {
+                        tr.style.backgroundColor = "#7777FF30";
+                    }
+                    row_count++;
+
+                    display_episode_list.appendChild(tr);
                 }
 
             });
@@ -255,6 +327,8 @@ define(['mainTabsManager'], function (mainTabsManager) {
                 var tr = document.createElement("tr");
                 var td = document.createElement("td");
                 td.appendChild(document.createTextNode(item_details.Name));
+                td.style.overflow = "hidden";
+                td.style.whiteSpace = "nowrap";
                 td.addEventListener("click", function () {
                     PopulateSelectedPath(view, item_details);
                     PopulateChapterInfo(view, item_details);
