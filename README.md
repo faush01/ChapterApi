@@ -1,2 +1,2 @@
 # ChapterApi
-Emby Server plugin for viewing and editing chapters
+Emby Server plugin for viewing and editing chapters.

@@ -1,0 +1,70 @@
+﻿<div data-role="page" class="page type-interior pluginConfigurationPage withTabs"
+     data-require="emby-button,emby-select,emby-checkbox,emby-linkbutton,emby-input"
+     data-controller="__plugin/chapters.js">
+    <div data-role="content">
+        <div class="content-primary">
+            <h2>Chapters</h2>
+
+            <table>
+                <tr><td>Search</td><td><input id="search_text" type="text" /></td></tr>
+                <tr><td>Path</td><td><span id="path_string" style="border: solid 1px; padding: 2px 10px 2px 5px;">\</span></td></tr>
+            </table>
+
+            <table>
+                <tr>
+                    <td style="" valign="top">
+
+                        <div id="table-wrapper" style="position: relative; border: 1px solid black;">
+                            <div id="table-scroll" style="height: 350px; width: 350px; overflow: auto;">
+                                <table id="item_list">
+                                </table>
+                            </div>
+                        </div>
+
+                    </td>
+                    <td valign="top" style="width:100%;">
+
+                        <div id="display_item_info">
+                        </div>
+
+                        <div id="add_form_div">
+                            <table>
+                                <tr>
+                                    <td>Name:<input type="text" id="add_name" /></td>
+                                    <td>
+                                        Type:
+                                        <select id="add_type">
+                                            <option value="chapter">Chapter</option>
+                                            <option value="intro_start">IntroStart</option>
+                                            <option value="intro_end">IntroEnd</option>
+                                            <option value="credits_start">CreditsStart</option>
+                                        </select>
+                                    </td>
+                                    <td>Time: <input type="text" maxlength="2" size="2" value="00" id="add_hour" />:<input type="text" maxlength="2" size="2" value="00" id="add_minute" />:<input type="text" maxlength="2" size="2" value="00" id="add_second" /></td>
+                                    <td><button id="add_chapter_button">Add</button></td>
+                                </tr>
+                            </table>
+                            <input type="hidden" id="add_item_id" />
+                        </div>
+
+                        <table style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">Name</th>
+                                    <th style="text-align: left;">Type</th>
+                                    <th style="text-align: left;">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="display_chapter_list">
+                            </tbody>
+                        </table>
+
+                    </td>
+                </tr>
+            </table>
+
+
+
+        </div>
+    </div>
+</div>

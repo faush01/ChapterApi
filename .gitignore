@@ -1,0 +1,10 @@
+# ide ignore
+.vs
+*.user
+
+# build ignore
+bin/
+obj/
+
+# temp files
+*~
