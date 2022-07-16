@@ -365,6 +365,7 @@ namespace ChapterApi.Api
 
                 TimeSpan? intro_start = null;
                 TimeSpan? intro_end = null;
+                TimeSpan? credit_start = null;
                 List<ChapterInfo> chapters = _ir.GetChapters(episode);
                 foreach(ChapterInfo ci in chapters)
                 {
@@ -376,19 +377,47 @@ namespace ChapterApi.Api
                     {
                         intro_end = new TimeSpan(ci.StartPositionTicks);
                     }
+                    else if(ci.MarkerType == MarkerType.CreditsStart && credit_start == null)
+                    {
+                        credit_start = new TimeSpan(ci.StartPositionTicks);
+                    }
                 }
-                if(intro_start != null && intro_end != null)
+
+                if (intro_start != null)
                 {
-                    TimeSpan duration = intro_end.Value - intro_start.Value;
                     info.Add("IntroStart", intro_start.Value.ToString(@"hh\:mm\:ss"));
-                    info.Add("IntroEnd", intro_end.Value.ToString(@"hh\:mm\:ss"));
-                    info.Add("IntroSpan", duration.ToString(@"hh\:mm\:ss"));
                 }
                 else
                 {
                     info.Add("IntroStart", "--:--:--");
+                }
+
+                if (intro_end != null)
+                {
+                    info.Add("IntroEnd", intro_end.Value.ToString(@"hh\:mm\:ss"));
+                }
+                else
+                {
                     info.Add("IntroEnd", "--:--:--");
+                }
+
+                if (intro_start != null && intro_end != null)
+                {
+                    TimeSpan duration = intro_end.Value - intro_start.Value;
+                    info.Add("IntroSpan", duration.ToString(@"hh\:mm\:ss"));
+                }
+                else
+                {
                     info.Add("IntroSpan", "--:--:--");
+                }
+
+                if (credit_start != null)
+                {
+                    info.Add("CreditsStart", credit_start.Value.ToString(@"hh\:mm\:ss"));
+                }
+                else
+                {
+                    info.Add("CreditsStart", "--:--:--");
                 }
 
                 episode_list.Add(info);

@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['mainTabsManager'], function (mainTabsManager) {
+define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (mainTabsManager, playbackManager, connectionManager) {
     'use strict';
 
     ApiClient.getApiData = function (url_to_get) {
@@ -229,6 +229,13 @@ define(['mainTabsManager'], function (mainTabsManager) {
                     td.style.whiteSpace = "nowrap";
                     tr.appendChild(td);
 
+                    td = document.createElement("td");
+                    td.appendChild(document.createTextNode(episode.CreditsStart));
+                    td.style.padding = cell_padding;
+                    td.style.overflow = "hidden";
+                    td.style.whiteSpace = "nowrap";
+                    tr.appendChild(td);
+
                     if (row_count % 2 === 0) {
                         tr.style.backgroundColor = "#77FF7730";
                     }
@@ -373,6 +380,15 @@ define(['mainTabsManager'], function (mainTabsManager) {
             //    }
             //];
             //mainTabsManager.setTabs(this, 0, tabs);
+
+            //var options = {};
+            //apiClient.getItem(apiClient.getCurrentUserId(), instance.id, options)
+            //var apiClient = connectionManager.getApiClient("test");
+            //var current_user = apiClient.getCurrentUserId();
+            //console.log("Current User Id : " + JSON.stringify(current_user));
+            //var media_source = playbackManager.getPlaybackMediaSources(item)
+            //var supported = playbackManager.getSupportedCommands();
+            //console.log(JSON.stringify(supported));
 
             var add_chapter_button = view.querySelector('#add_chapter_button');
             add_chapter_button.addEventListener("click", function () { AddChapter(view); });
