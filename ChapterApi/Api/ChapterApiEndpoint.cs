@@ -82,6 +82,8 @@ namespace ChapterApi.Api
         public string type { get; set; }
         [ApiMember(Name = "time", Description = "time string of start time hh:mm:ss", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string time { get; set; }
+        [ApiMember(Name = "auto_interval", Description = "auto create interval", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
+        public int auto_interval { set; get; }
     }
 
     public class ChapterApiEndpoint : IService, IRequiresRequest
@@ -491,12 +493,26 @@ namespace ChapterApi.Api
                         }
                     }
                 }
+            }
+            else if (!string.IsNullOrEmpty(request.action) && request.action == "auto")
+            {
+                actions.Add("Auto Adding Chapters at intervals: " + request.auto_interval);
 
-                //if (request.index >= 0 && request.index < chapters.Count)
-                //{
-                //    chapters.RemoveAt(request.index);
-                //    actions.Add("Chapter with index " + request.index + " was removed");
-                //}
+                TimeSpan interval = new TimeSpan(0, request.auto_interval, 0);
+                TimeSpan auto_chapter = new TimeSpan(interval.Ticks);
+                int chapter_index = 1;
+                string chapter_name = request.name;
+                while(auto_chapter.Ticks < item.RunTimeTicks)
+                {
+                    ChapterInfo ci = new ChapterInfo();
+                    ci.Name = chapter_name + " " + chapter_index;
+                    ci.MarkerType = MarkerType.Chapter;
+                    ci.StartPositionTicks = auto_chapter.Ticks;
+                    chapters.Add(ci);
+
+                    auto_chapter += interval;
+                    chapter_index++;
+                }
             }
             else if (!string.IsNullOrEmpty(request.action) && request.action == "add")
             {

@@ -26,6 +26,31 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (ma
         });
     };
 
+    function AutoCreateChapters(view) {
+
+        var item_id = view.querySelector("#add_item_id").value;
+        var auto_add_interval_select = view.querySelector("#auto_chapter_interval");
+        var auto_add_interval = auto_add_interval_select.options[auto_add_interval_select.selectedIndex].value;
+        var auto_chapter_name = view.querySelector("#auto_chapter_name").value;
+
+        console.log("Chapter auto add : " + item_id + " " + auto_add_interval);
+
+        var url = "chapter_api/update_chapters?id=" + item_id;
+        url += "&action=auto";
+        url += "&name=" + auto_chapter_name;
+        url += "&auto_interval=" + auto_add_interval;
+        url += "&stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
+
+        ApiClient.getApiData(url).then(function (add_result) {
+            console.log("Loaded Auto Create Data: " + JSON.stringify(add_result));
+
+            var item_info = { Id: item_id };
+            PopulateChapterInfo(view, item_info);
+        });
+
+    }
+
     function AddChapter(view) {
 
         var item_id = view.querySelector('#add_item_id').value;
@@ -162,11 +187,14 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (ma
 
                 // show chapter list
                 var chapter_table = view.querySelector('#chapter_table');
+                var create_chapters = view.querySelector('#create_chapters');
                 if (item_data.ItemType.toUpperCase() === "MOVIE" || item_data.ItemType.toUpperCase() === "EPISODE") {
                     chapter_table.style.display = "block";
+                    create_chapters.style.display = "block";
                 }
                 else {
                     chapter_table.style.display = "none";
+                    create_chapters.style.display = "none";
                 }
 
                 // show episode list
@@ -463,6 +491,9 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (ma
 
             var add_chapter_button = view.querySelector('#add_chapter_button');
             add_chapter_button.addEventListener("click", function () { AddChapter(view); });
+
+            var auto_create_button = view.querySelector('#auto_create_button');
+            auto_create_button.addEventListener("click", function () { AutoCreateChapters(view); });
 
             var search_box = view.querySelector("#search_text");
             search_box.addEventListener("input", function () { SearchChanged(view, search_box); });

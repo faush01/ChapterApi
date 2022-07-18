@@ -34,7 +34,7 @@
                         </div>
 
                         <div style="display: none;" id="chapter_table">
-                            <h4>Chapter List</h4>
+                            <h3>Chapter List</h3>
                             <input type="hidden" id="add_item_id" />
                             <table style="table-layout: fixed; width: 100%;">
                                 <thead>
@@ -70,7 +70,7 @@
                         </div>
 
                         <div style="display: none;" id="episodes_table">
-                            <h4>Season Intro Summary</h4>
+                            <h3>Season Intro Summary</h3>
                             <table style="table-layout: fixed; width: 100%;">
                                 <thead>
                                     <tr>
@@ -84,6 +84,27 @@
                                 <tbody id="display_episode_list">
                                 </tbody>
                             </table>
+                        </div>
+
+                        <div style="display: none;" id="create_chapters">
+
+                            <h3>Auto Chapter Create</h3>
+
+                            Auto create new chapters every 
+                            <select id="auto_chapter_interval">
+                                <option value="1">1 min</option>
+                                <option value="2">2 min</option>
+                                <option value="3">3 min</option>
+                                <option value="4">4 min</option>
+                                <option value="5" selected>5 min</option>
+                                <option value="7">7 min</option>
+                                <option value="10">10 min</option>
+                                <option value="15">15 min</option>
+                            </select>
+                            with name
+                            <input type="text" id="auto_chapter_name" value="Chapter"/>
+                            <button id="auto_create_button">Create</button>
+
                         </div>
 
                     </td>
