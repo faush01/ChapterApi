@@ -26,6 +26,16 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (ma
         });
     };
 
+    function CopyTime(view, start_time) {
+        var tokens = start_time.split(".");
+        var msec = tokens[1];
+        tokens = tokens[0].split(":");
+        view.querySelector('#add_hour').value = tokens[0];
+        view.querySelector('#add_minute').value = tokens[1];
+        view.querySelector('#add_second').value = tokens[2];
+        view.querySelector('#add_msecond').value = msec;
+    }
+
     function AutoCreateChapters(view) {
 
         var item_id = view.querySelector("#add_item_id").value;
@@ -62,7 +72,8 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (ma
         var add_hour = view.querySelector('#add_hour').value;
         var add_minute = view.querySelector('#add_minute').value;
         var add_second = view.querySelector('#add_second').value;
-        var time_string = add_hour + ":" + add_minute + ":" + add_second;
+        var add_msecond = view.querySelector('#add_msecond').value;
+        var time_string = add_hour + ":" + add_minute + ":" + add_second + "." + add_msecond;
 
         var url = "chapter_api/update_chapters?id=" + item_id;
         url += "&action=add";
@@ -172,6 +183,7 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (ma
                 view.querySelector('#add_hour').value = "00";
                 view.querySelector('#add_minute').value = "00";
                 view.querySelector('#add_second').value = "00";
+                view.querySelector('#add_msecond').value = "000";
 
                 // clean chapters table
                 var display_chapter_list = view.querySelector('#display_chapter_list');
@@ -241,14 +253,27 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (ma
                     td = document.createElement("td");
                     td.style.padding = cell_padding;
                     td.style.textAlign = "center";
+
                     var i = document.createElement("i");
+                    i.title = "Delete";
                     i.className = "md-icon";
                     i.style.fontSize = "25px";
                     i.style.cursor = "pointer";
                     i.appendChild(document.createTextNode("highlight_off"));
                     i.addEventListener("click", function () { RemoveChapter(view, item_info, chapter); });
-
                     td.appendChild(i);
+
+                    td.appendChild(document.createTextNode("\u00A0"));
+
+                    i = document.createElement("i");
+                    i.title = "Copy Time";
+                    i.className = "md-icon";
+                    i.style.fontSize = "25px";
+                    i.style.cursor = "pointer";
+                    i.appendChild(document.createTextNode("edit_note"));
+                    i.addEventListener("click", function () { CopyTime(view, chapter.StartTime); });
+                    td.appendChild(i);
+
                     tr.appendChild(td);
 
                     if (chapter.MarkerType !== "Chapter") {

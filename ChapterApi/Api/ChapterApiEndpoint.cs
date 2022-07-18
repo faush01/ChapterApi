@@ -338,7 +338,7 @@ namespace ChapterApi.Api
                 chap_info.Add("StartPositionTicks", ci.StartPositionTicks);
 
                 TimeSpan ct = new TimeSpan(ci.StartPositionTicks);
-                chap_info.Add("StartTime", ct.ToString(@"hh\:mm\:ss"));
+                chap_info.Add("StartTime", ct.ToString(@"hh\:mm\:ss\.fff"));
 
                 chap_info.Add("Index", chap_index);
 
@@ -387,39 +387,39 @@ namespace ChapterApi.Api
 
                 if (intro_start != null)
                 {
-                    info.Add("IntroStart", intro_start.Value.ToString(@"hh\:mm\:ss"));
+                    info.Add("IntroStart", intro_start.Value.ToString(@"hh\:mm\:ss\.fff"));
                 }
                 else
                 {
-                    info.Add("IntroStart", "--:--:--");
+                    info.Add("IntroStart", "--:--:--.---");
                 }
 
                 if (intro_end != null)
                 {
-                    info.Add("IntroEnd", intro_end.Value.ToString(@"hh\:mm\:ss"));
+                    info.Add("IntroEnd", intro_end.Value.ToString(@"hh\:mm\:ss\.fff"));
                 }
                 else
                 {
-                    info.Add("IntroEnd", "--:--:--");
+                    info.Add("IntroEnd", "--:--:--.---");
                 }
 
                 if (intro_start != null && intro_end != null)
                 {
                     TimeSpan duration = intro_end.Value - intro_start.Value;
-                    info.Add("IntroSpan", duration.ToString(@"hh\:mm\:ss"));
+                    info.Add("IntroSpan", duration.ToString(@"hh\:mm\:ss\.fff"));
                 }
                 else
                 {
-                    info.Add("IntroSpan", "--:--:--");
+                    info.Add("IntroSpan", "--:--:--.---");
                 }
 
                 if (credit_start != null)
                 {
-                    info.Add("CreditsStart", credit_start.Value.ToString(@"hh\:mm\:ss"));
+                    info.Add("CreditsStart", credit_start.Value.ToString(@"hh\:mm\:ss\.fff"));
                 }
                 else
                 {
-                    info.Add("CreditsStart", "--:--:--");
+                    info.Add("CreditsStart", "--:--:--.---");
                 }
 
                 episode_list.Add(info);
