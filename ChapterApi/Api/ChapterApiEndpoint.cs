@@ -72,8 +72,8 @@ namespace ChapterApi.Api
     {
         [ApiMember(Name = "id", Description = "item id", IsRequired = false, DataType = "long", ParameterType = "query", Verb = "GET")]
         public long id { get; set; } = -1;
-        [ApiMember(Name = "index", Description = "chapter index", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
-        public int index { get; set; } = -1;
+        [ApiMember(Name = "index_list", Description = "list if indexes", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string index_list { set; get; }
         [ApiMember(Name = "action", Description = "action to take", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string action { get; set; }
         [ApiMember(Name = "name", Description = "chapter name", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -469,12 +469,34 @@ namespace ChapterApi.Api
 
             if (!string.IsNullOrEmpty(request.action) && request.action == "remove")
             {
-                actions.Add("Removing Chapter");
-                if (request.index >= 0 && request.index < chapters.Count)
+                actions.Add("Removing Chapters");
+
+                if(!string.IsNullOrEmpty(request.index_list))
                 {
-                    chapters.RemoveAt(request.index);
-                    actions.Add("Chapter with index " + request.index + " was removed");
+                    string[] indexes = request.index_list.Split(new string[] {","}, StringSplitOptions.RemoveEmptyEntries);
+                    List<int> index_list = new List<int>();
+                    foreach (string i in indexes)
+                    {
+                        index_list.Add(int.Parse(i));
+                    }
+                    index_list.Sort();
+                    Console.WriteLine(string.Join("|", index_list));
+                    for (int x = index_list.Count - 1; x >= 0; x--)
+                    {
+                        Console.WriteLine("Removing Item : " + x + " " + index_list[x]);
+                        if (index_list[x] < chapters.Count)
+                        {
+                            chapters.RemoveAt(index_list[x]);
+                            actions.Add("Chapter with index " + index_list[x] + " was removed");
+                        }
+                    }
                 }
+
+                //if (request.index >= 0 && request.index < chapters.Count)
+                //{
+                //    chapters.RemoveAt(request.index);
+                //    actions.Add("Chapter with index " + request.index + " was removed");
+                //}
             }
             else if (!string.IsNullOrEmpty(request.action) && request.action == "add")
             {

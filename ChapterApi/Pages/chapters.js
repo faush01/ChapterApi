@@ -55,13 +55,55 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (ma
         });
     }
 
+    function SelectAll(view) {
+        var select_all_check = view.querySelector("#chapter_select_all");
+        var selectors = view.querySelectorAll("input#chapter_select");
+        for (const selector of selectors) {
+            selector.checked = select_all_check.checked;
+        }
+    }
+
     function RemoveChapter(view, item_info, chapter_info) {
 
-        console.log("Removing Chapter: ItemInfo:" + JSON.stringify(item_info) + " ChapterInfo:" + JSON.stringify(chapter_info));
+        var message = "";
+        var remove_indexes = "";
+        if (chapter_info == null) {
+            var selectors = view.querySelectorAll("input#chapter_select");
+
+            var selected = [];
+            for (const selector of selectors) {
+                var checked = selector.checked;
+                var chap_id = selector.chap_index;
+                if (checked) {
+                    selected.push(chap_id);
+                }
+            }
+            remove_indexes = selected.join(',');
+
+            if (selected.length > 0) {
+                message = "Are you sure you want to remove (" + selected.length + ") chapters?";
+            }
+        }
+        else {
+            message = "Are you sure you want to remove this chapter?";
+            remove_indexes = chapter_info.Index;
+        }
+
+        if (message !== "") {
+            var result = confirm(message);
+            if (!result) {
+                return;
+            }
+        }
+        else {
+            return;
+        }
+
+        console.log("Removing Chapter: ItemInfo:" + JSON.stringify(item_info) + " Remove Indexes: " + remove_indexes);
 
         var url = "chapter_api/update_chapters?id=" + item_info.Id;
         url += "&action=remove";
-        url += "&index=" + chapter_info.Index;
+        url += "&index_list=" + remove_indexes;
         url += "&stamp=" + new Date().getTime();
         url = ApiClient.getUrl(url);
 
@@ -145,6 +187,15 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (ma
                     var td = null;
 
                     td = document.createElement("td");
+                    td.style.overflow = "hidden";
+                    td.style.whiteSpace = "nowrap";
+
+                    var box = document.createElement("input");
+                    box.type = "checkbox";
+                    box.id = "chapter_select";
+                    box.chap_index = chapter.Index;
+                    td.appendChild(box);
+
                     td.appendChild(document.createTextNode(chapter.Name));
                     td.style.padding = cell_padding;
                     tr.appendChild(td);
@@ -167,13 +218,7 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (ma
                     i.style.fontSize = "25px";
                     i.style.cursor = "pointer";
                     i.appendChild(document.createTextNode("highlight_off"));
-
-                    i.addEventListener("click", function () {
-                        var result = confirm("Are you sure you want to remove this chapter?\n" + item_info.Name + " (" + chapter.Name + ":" + chapter.MarkerType + ":" + chapter.StartTime + ")");
-                        if (result) {
-                            RemoveChapter(view, item_info, chapter);
-                        }
-                     });
+                    i.addEventListener("click", function () { RemoveChapter(view, item_info, chapter); });
 
                     td.appendChild(i);
                     tr.appendChild(td);
@@ -192,6 +237,32 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (ma
 
                     row_count++;
                 }
+
+                // add delete all button
+                if (chapter_data.length > 0) {
+                    var tr = document.createElement("tr");
+                    var td = document.createElement("td");
+
+                    var check = document.createElement("input");
+                    check.type = "checkbox";
+                    check.id = "chapter_select_all";
+                    check.addEventListener("click", function () { SelectAll(view); });
+                    td.appendChild(check);
+
+                    td.appendChild(document.createTextNode("\u00A0"));
+                    td.appendChild(document.createTextNode("\u00A0"));
+
+                    var delete_all = document.createElement("button");
+                    delete_all.appendChild(document.createTextNode("Delete"));
+                    delete_all.addEventListener("click", function () { RemoveChapter(view, item_info, null);  } );
+
+                    td.appendChild(delete_all);
+                    td.style.padding = cell_padding;
+                    tr.appendChild(td);
+
+                    display_chapter_list.appendChild(tr);
+                }
+
 
                 if (episode_data == null) {
                     episode_data = [];
