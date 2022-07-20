@@ -275,6 +275,7 @@ namespace ChapterApi.Api
                 Dictionary<string, object> info = new Dictionary<string, object>();
                 info.Add("Id", item.InternalId);
                 info.Add("Name", item.Name);
+                info.Add("SortName", item.SortName);
                 info.Add("ItemType", item.GetType().Name);
 
                 if (item.GetType() == typeof(Episode))
@@ -283,32 +284,31 @@ namespace ChapterApi.Api
                     info.Add("Series", e.SeriesName);
                     info.Add("Season", e.Season.Name);
 
-                    string epp_name = "";
+                    string index_num = "";
                     if (e.IndexNumber != null)
                     {
-                        epp_name += e.IndexNumber.Value.ToString("D2");
+                        index_num = e.IndexNumber.Value.ToString("D2");
                     }
                     else
                     {
-                        epp_name += "00";
+                        index_num = "00";
                     }
-                    epp_name += " - " + e.Name;
-
-                    info["Name"] = epp_name;
+                    info["Name"] = index_num + " - " + item.Name;
+                    info["SortName"] = index_num + " - " + item.SortName;
                 }
                 else if (item.GetType() == typeof(Season))
                 {
-                    string season_name = "";
+                    string index_num = "";
                     if (item.IndexNumber != null)
                     {
-                        season_name += item.IndexNumber.Value.ToString("D2");
+                        index_num = item.IndexNumber.Value.ToString("D2");
                     }
                     else
                     {
-                        season_name += "00";
+                        index_num = "00";
                     }
-                    season_name += " - " + item.Name;
-                    info["Name"] = season_name;
+                    info["Name"] = index_num + " - " + item.Name;
+                    info["SortName"] = index_num + " - " + item.SortName;   
                 }
 
                 items.Add(info);
@@ -316,8 +316,8 @@ namespace ChapterApi.Api
 
             items.Sort(delegate (Dictionary<string, object> c1, Dictionary<string, object> c2) 
                 {
-                    string c1_str = c1["Name"] as string;
-                    string c2_str = c2["Name"] as string;
+                    string c1_str = c1["SortName"] as string;
+                    string c2_str = c2["SortName"] as string;
                     int cmp_restlt = string.Compare(c1_str, c2_str, comparisonType: StringComparison.OrdinalIgnoreCase);
                     return cmp_restlt; 
                 });
@@ -439,6 +439,34 @@ namespace ChapterApi.Api
             item_info.Add("Id", item.InternalId);
             item_info.Add("Name", item.Name);
             item_info.Add("ItemType", item.GetType().Name);
+
+            if (item.GetType() == typeof(Episode))
+            {
+                string index_num = "";
+                if (item.IndexNumber != null)
+                {
+                    index_num = item.IndexNumber.Value.ToString("D2");
+                }
+                else
+                {
+                    index_num = "00";
+                }
+                item_info["Name"] = index_num + " - " + item.Name;
+            }
+            else if (item.GetType() == typeof(Season))
+            {
+                string index_num = "";
+                if (item.IndexNumber != null)
+                {
+                    index_num = item.IndexNumber.Value.ToString("D2");
+                }
+                else
+                {
+                    index_num = "00";
+                }
+                item_info["Name"] = index_num + " - " + item.Name;
+            }
+
             responce_data.Add("item_info", item_info);
 
             if (item.GetType() == typeof(Movie) || item.GetType() == typeof(Episode))
