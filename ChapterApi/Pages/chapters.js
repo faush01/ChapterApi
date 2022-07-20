@@ -14,7 +14,8 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (mainTabsManager, playbackManager, connectionManager) {
+define(['mainTabsManager', 'connectionManager', 'playbackManager', 'dialogHelper'], function (
+    mainTabsManager, playbackManager, connectionManager, dialogHelper) {
     'use strict';
 
     ApiClient.getApiData = function (url_to_get) {
@@ -25,6 +26,104 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (ma
             dataType: "json"
         });
     };
+
+    function GetVideoUrl(item_id, startTime) {
+        var url = "Videos/" + item_id + "/stream.mp4";
+        url += "?StartTimeTicks=" + startTime;
+        url += "&VideoCodec=h264";
+        url += "&AudioCodec=mp3";
+        url += "&VideoBitrate=1000000";
+        url += "&AudioBitrate=128000";
+        url += "&allowVideoStreamCopy=false";
+        url += "&MaxWidth=640";
+        //url += "&AudioStreamIndex=1";
+        //url += "&SubtitleStreamIndex=12";
+        //url += "&SubtitleMethod=Hls";
+        //url += "&TranscodingMaxAudioChannels=2";
+        //url += "&SegmentContainer=m4s,ts";
+        //url += "&MinSegments=1";
+        //url += "&BreakOnNonKeyFrames=True";
+        //url += "&ManifestSubtitles=vtt";
+        //url += "&h264-profile=high,main,baseline,constrainedbaseline,high10";
+        //url += "&h264-level=52";
+        //url += "&TranscodeReasons=AudioCodecNotSupported,DirectPlayError";
+        url += "&PlaySessionId=" + new Date().getTime(); 
+        url += "&api_key=" + ApiClient._serverInfo.AccessToken;
+        url += "&n=" + new Date().getTime();
+        var url = ApiClient.getUrl(url);
+        return url;
+    }
+
+    function GetTimeString(time) {
+        const result = new Date(time * 1000).toISOString().slice(11, 19);
+        return result;
+    }
+
+    function PlayChapter(view, item_info, chapter_info) {
+        //alert("play");
+        console.log("Play Chapter : item_info=" + JSON.stringify(item_info) + " chapter_info=" + JSON.stringify(chapter_info));
+
+        var ticks_per_sec = 10000000;
+        var start_time_offset = chapter_info.StartPositionTicks - (5 * ticks_per_sec);
+        var chapter_start_sec = chapter_info.StartPositionTicks / ticks_per_sec;
+
+        var dlg = dialogHelper.createDialog({ removeOnClose: true, size: 'small' });
+        dlg.classList.add('ui-body-a');
+        dlg.classList.add('background-theme-a');
+        dlg.classList.add('formDialog');
+        dlg.style.maxWidth = '50%';
+        dlg.style.maxHeight = '65%';
+
+        var html = '';
+        html += '<div class="formDialogHeader">';
+        html += '<button is="paper-icon-button-light" class="btnCancel autoSize" tabindex="-1">';
+        html += '<i class="md-icon">&#xE5C4;</i>';
+        html += '</button>';
+        html += '<h3 class="formDialogHeaderTitle">Chapter : ' + chapter_info.Name + ' (' + chapter_info.StartTime + ')</h3>';
+        html += '</div>';
+
+        html += '<div class="formDialogContent" style="margin:2em">';
+        html += '<div class="dialogContentInner" style="max-width: 100%; justify-content: center;">';
+
+        var video_url = GetVideoUrl(item_info.Id, start_time_offset);
+        console.log("Chapter Play URL : " + video_url);
+
+        html += '<video style="width:100%; height:100%" autoplay controls ';
+        html += 'webkit-playsinline="" playsinline="" crossorigin="anonymous" ';
+        html += 'src = "' + video_url + '">';
+        html += '</video>';
+
+        html += '<br /><div id="progression" style="font-weight: bold;"></div>';
+
+        html += '</div>';
+        html += '</div>';
+
+        dlg.innerHTML = html;
+
+        var video = dlg.querySelector('video');
+        var progress = dlg.querySelector('#progression');
+        var time_offset = start_time_offset / ticks_per_sec;
+
+        video.addEventListener("timeupdate", function () {
+            var prog_time = "Time: " + GetTimeString(this.currentTime + time_offset);
+            progress.innerHTML = prog_time;
+            if (chapter_start_sec < (this.currentTime + time_offset)) {
+                progress.style.backgroundColor = "#00FF00";
+            }
+            else {
+                progress.style.backgroundColor = "#FF0000";
+            }
+        });
+
+        dlg.querySelectorAll('.btnCancel').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                dialogHelper.close(dlg);
+            });
+        });
+
+        dialogHelper.open(dlg);
+
+    }
 
     function CopyTime(view, start_time) {
         var tokens = start_time.split(".");
@@ -272,6 +371,17 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager'], function (ma
                     i.style.cursor = "pointer";
                     i.appendChild(document.createTextNode("edit_note"));
                     i.addEventListener("click", function () { CopyTime(view, chapter.StartTime); });
+                    td.appendChild(i);
+
+                    td.appendChild(document.createTextNode("\u00A0"));
+
+                    i = document.createElement("i");
+                    i.title = "Play";
+                    i.className = "md-icon";
+                    i.style.fontSize = "25px";
+                    i.style.cursor = "pointer";
+                    i.appendChild(document.createTextNode("play_circle_outline"));
+                    i.addEventListener("click", function () { PlayChapter(view, item_info, chapter); });
                     td.appendChild(i);
 
                     tr.appendChild(td);
