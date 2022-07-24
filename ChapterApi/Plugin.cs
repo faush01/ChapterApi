@@ -30,7 +30,7 @@ namespace ChapterApi
     {
         public override string Name => "Chapter API";
         public override Guid Id => new Guid("64d8705e-c1e2-401f-9b64-2592aebde8eb");
-        public override string Description => "Interact with cahpters";
+        public override string Description => "View and edit chapters";
         public PluginConfiguration PluginConfiguration => Configuration;
 
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
