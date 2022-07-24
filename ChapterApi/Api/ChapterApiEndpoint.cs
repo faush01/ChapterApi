@@ -368,11 +368,15 @@ namespace ChapterApi.Api
                 TimeSpan? intro_start = null;
                 TimeSpan? intro_end = null;
                 TimeSpan? credit_start = null;
+                string intro_image_tag = null;
+                int intro_index = -1;
                 List<ChapterInfo> chapters = _ir.GetChapters(episode);
                 foreach(ChapterInfo ci in chapters)
                 {
                     if(ci.MarkerType == MarkerType.IntroStart && intro_start == null)
                     {
+                        intro_index = ci.ChapterIndex;
+                        intro_image_tag = ci.ImageTag;
                         intro_start = new TimeSpan(ci.StartPositionTicks);
                     }
                     else if (ci.MarkerType == MarkerType.IntroEnd && intro_end == null)
@@ -393,6 +397,9 @@ namespace ChapterApi.Api
                 {
                     info.Add("IntroStart", "--:--:--.---");
                 }
+
+                info.Add("IntroIndex", intro_index);
+                info.Add("IntroImageTag", intro_image_tag);
 
                 if (intro_end != null)
                 {

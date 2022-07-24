@@ -443,6 +443,20 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager', 'dialogHelper
                     tr.appendChild(td);
 
                     td = document.createElement("td");
+                    /*
+                    if (episode.IntroImageTag && episode.IntroImageTag !== "") {
+                        var url = "Items/" + episode.Id + "/Images/Chapter/" + episode.IntroIndex;
+                        url += "?maxWidth=480&quality=90&tag=" + episode.IntroImageTag;
+                        var img_src = ApiClient.getUrl(url);
+                        console.log(img_src);
+                        var img = document.createElement("img");
+                        img.src = img_src;
+                        img.style.width = "150px";
+                        td.appendChild(img);
+                        var line_break = document.createElement("br");
+                        td.appendChild(line_break);
+                    }
+                    */
                     td.appendChild(document.createTextNode(episode.IntroStart));
                     td.style.padding = cell_padding;
                     td.style.overflow = "hidden";
