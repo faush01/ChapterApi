@@ -360,98 +360,50 @@ namespace ChapterApi.Api
             foreach (BaseItem episode in results)
             {
                 //_logger.Info(item.Name + "(" + item.InternalId + ")");
-                Dictionary<string, object> info = new Dictionary<string, object>();
-                info.Add("Id", episode.InternalId);
-                info.Add("ItemType", episode.GetType().Name);
+                Dictionary<string, object> episode_info = new Dictionary<string, object>();
+
+                episode_info.Add("Id", episode.InternalId);
+                episode_info.Add("ItemType", episode.GetType().Name);
 
                 string ep_no = (episode.IndexNumber ?? 0).ToString("D2");
-                info.Add("Name", ep_no + " - " + episode.Name);
+                episode_info.Add("Name", ep_no + " - " + episode.Name);
 
-                TimeSpan? intro_start = null;
-                int intro_start_index = -1;
-                string intro_start_image_tag = null;
-
-                TimeSpan? intro_end = null;
-                int intro_end_index = -1;
-                string intro_end_image_tag = null;
-
-                TimeSpan? credit_start = null;
-                int credit_start_index = -1;
-                string credit_start_image_tag = null;
+                long? intro_start = null;
+                long? intro_end = null;
 
                 List<ChapterInfo> chapters = _ir.GetChapters(episode);
                 foreach(ChapterInfo ci in chapters)
                 {
-                    if(ci.MarkerType == MarkerType.IntroStart && intro_start == null)
-                    {
-                        intro_start_index = ci.ChapterIndex;
-                        intro_start_image_tag = ci.ImageTag;
-                        intro_start = new TimeSpan(ci.StartPositionTicks);
-                    }
-                    else if (ci.MarkerType == MarkerType.IntroEnd && intro_end == null)
-                    {
-                        intro_end_index = ci.ChapterIndex;
-                        intro_end_image_tag = ci.ImageTag;
-                        intro_end = new TimeSpan(ci.StartPositionTicks);
-                    }
-                    else if(ci.MarkerType == MarkerType.CreditsStart && credit_start == null)
-                    {
-                        credit_start_index = ci.ChapterIndex;
-                        credit_start_image_tag = ci.ImageTag;
-                        credit_start = new TimeSpan(ci.StartPositionTicks);
-                    }
-                }
+                    Dictionary<string, object> chapter_info = new Dictionary<string, object>();
+                    chapter_info.Add("Index", ci.ChapterIndex);
+                    chapter_info.Add("ImageTag", ci.ImageTag);
+                    chapter_info.Add("Time", new TimeSpan(ci.StartPositionTicks).ToString(@"hh\:mm\:ss\.fff"));
+                    chapter_info.Add("TimeTicks", ci.StartPositionTicks);
 
-                // add chapter image info
-                info.Add("IntroStartIndex", intro_start_index);
-                info.Add("IntroStartImageTag", intro_start_image_tag);
-                info.Add("IntroEndIndex", intro_end_index);
-                info.Add("IntroEndImageTag", intro_end_image_tag);
-                info.Add("CreditsIndex", intro_end_index);
-                info.Add("CreditsImageTag", intro_end_image_tag);
-
-                // add intro start
-                if (intro_start != null)
-                {
-                    info.Add("IntroStart", intro_start.Value.ToString(@"hh\:mm\:ss\.fff"));
-                }
-                else
-                {
-                    info.Add("IntroStart", "--:--:--.---");
-                }
-
-                // add intro end
-                if (intro_end != null)
-                {
-                    info.Add("IntroEnd", intro_end.Value.ToString(@"hh\:mm\:ss\.fff"));
-                }
-                else
-                {
-                    info.Add("IntroEnd", "--:--:--.---");
+                    if (ci.MarkerType == MarkerType.IntroStart && !episode_info.ContainsKey("IntroStart"))
+                    {
+                        intro_start = ci.StartPositionTicks;
+                        episode_info.Add("IntroStart", chapter_info);
+                    }
+                    else if (ci.MarkerType == MarkerType.IntroEnd && !episode_info.ContainsKey("IntroEnd"))
+                    {
+                        intro_end = ci.StartPositionTicks;
+                        episode_info.Add("IntroEnd", chapter_info);
+                    }
+                    else if(ci.MarkerType == MarkerType.CreditsStart && !episode_info.ContainsKey("CreditsStart"))
+                    {
+                        episode_info.Add("CreditsStart", chapter_info);
+                    }
                 }
 
                 // add intro duration
-                if (intro_start != null && intro_end != null)
+                if(intro_start != null && intro_end != null && intro_end >= intro_start)
                 {
-                    TimeSpan duration = intro_end.Value - intro_start.Value;
-                    info.Add("IntroSpan", duration.ToString(@"hh\:mm\:ss\.fff"));
-                }
-                else
-                {
-                    info.Add("IntroSpan", "--:--:--.---");
+                    TimeSpan span = new TimeSpan(intro_end.Value) - new TimeSpan(intro_start.Value);
+                    episode_info.Add("IntroDuration", span.ToString(@"hh\:mm\:ss\.fff"));
                 }
 
-                // add creits start
-                if (credit_start != null)
-                {
-                    info.Add("CreditsStart", credit_start.Value.ToString(@"hh\:mm\:ss\.fff"));
-                }
-                else
-                {
-                    info.Add("CreditsStart", "--:--:--.---");
-                }
-
-                episode_list.Add(info);
+                episode_list.Add(episode_info);
             }
 
             episode_list.Sort(delegate (Dictionary<string, object> c1, Dictionary<string, object> c2)

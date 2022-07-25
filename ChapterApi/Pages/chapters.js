@@ -429,7 +429,7 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager', 'dialogHelper
                     display_chapter_list.appendChild(tr);
                 }
 
-
+                var show_images = view.querySelector("#show_images").checked;
                 if (episode_data == null) {
                     episode_data = [];
                 }
@@ -445,43 +445,95 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager', 'dialogHelper
                     td.style.whiteSpace = "nowrap";
                     tr.appendChild(td);
 
+                    var intro_start = episode.IntroStart;
                     td = document.createElement("td");
-                    /*
-                    if (episode.IntroStartImageTag && episode.IntroStartImageTag !== "") {
-                        var url = "Items/" + episode.Id + "/Images/Chapter/" + episode.IntroStartIndex;
-                        url += "?maxWidth=480&quality=90&tag=" + episode.IntroStartImageTag;
-                        var img_src = ApiClient.getUrl(url);
-                        console.log(img_src);
-                        var img = document.createElement("img");
-                        img.src = img_src;
-                        img.style.width = "90px";
-                        td.appendChild(img);
-                        var line_break = document.createElement("br");
-                        td.appendChild(line_break);
+                    if (intro_start) {
+
+                        if (show_images && intro_start.ImageTag && intro_start.ImageTag !== "") {
+                            var url = "Items/" + episode.Id + "/Images/Chapter/" + intro_start.Index;
+                            url += "?maxWidth=480&quality=90&tag=" + intro_start.ImageTag;
+                            var img_src = ApiClient.getUrl(url);
+                            console.log(img_src);
+                            var img = document.createElement("img");
+                            img.src = img_src;
+                            img.style.width = "90px";
+                            td.appendChild(img);
+                            var line_break = document.createElement("br");
+                            td.appendChild(line_break);
+                        }
+
+                        td.appendChild(document.createTextNode(intro_start.Time));
                     }
-                    */
-                    td.appendChild(document.createTextNode(episode.IntroStart));
+                    else {
+                        td.appendChild(document.createTextNode("--:--:--.---"));
+                    }
                     td.style.padding = cell_padding;
                     td.style.overflow = "hidden";
                     td.style.whiteSpace = "nowrap";
                     tr.appendChild(td);
 
+                    var intro_end = episode.IntroEnd;
                     td = document.createElement("td");
-                    td.appendChild(document.createTextNode(episode.IntroEnd));
+                    if (intro_end) {
+
+                        if (show_images && intro_end.ImageTag && intro_end.ImageTag !== "") {
+                            var url = "Items/" + episode.Id + "/Images/Chapter/" + intro_end.Index;
+                            url += "?maxWidth=480&quality=90&tag=" + intro_end.ImageTag;
+                            var img_src = ApiClient.getUrl(url);
+                            console.log(img_src);
+                            var img = document.createElement("img");
+                            img.src = img_src;
+                            img.style.width = "90px";
+                            td.appendChild(img);
+                            var line_break = document.createElement("br");
+                            td.appendChild(line_break);
+                        }
+
+                        td.appendChild(document.createTextNode(intro_end.Time));
+                    }
+                    else {
+                        td.appendChild(document.createTextNode("--:--:--.---"));
+                    }
                     td.style.padding = cell_padding;
                     td.style.overflow = "hidden";
                     td.style.whiteSpace = "nowrap";
                     tr.appendChild(td);
 
+                    var intro_span = episode.IntroDuration;
                     td = document.createElement("td");
-                    td.appendChild(document.createTextNode(episode.IntroSpan));
+                    if (intro_span) {
+                        td.appendChild(document.createTextNode(intro_span));
+                    }
+                    else {
+                        td.appendChild(document.createTextNode("--:--:--.---"));
+                    }
                     td.style.padding = cell_padding;
                     td.style.overflow = "hidden";
                     td.style.whiteSpace = "nowrap";
                     tr.appendChild(td);
 
+                    var credits_info = episode.CreditsStart;
                     td = document.createElement("td");
-                    td.appendChild(document.createTextNode(episode.CreditsStart));
+                    if (credits_info) {
+
+                        if (show_images && credits_info.ImageTag && credits_info.ImageTag !== "") {
+                            var url = "Items/" + episode.Id + "/Images/Chapter/" + credits_info.Index;
+                            url += "?maxWidth=480&quality=90&tag=" + credits_info.ImageTag;
+                            var img_src = ApiClient.getUrl(url);
+                            console.log(img_src);
+                            var img = document.createElement("img");
+                            img.src = img_src;
+                            img.style.width = "90px";
+                            td.appendChild(img);
+                            var line_break = document.createElement("br");
+                            td.appendChild(line_break);
+                        }
+
+                        td.appendChild(document.createTextNode(credits_info.Time));
+                    }
+                    else {
+                        td.appendChild(document.createTextNode("--:--:--.---"));
+                    }
                     td.style.padding = cell_padding;
                     td.style.overflow = "hidden";
                     td.style.whiteSpace = "nowrap";
