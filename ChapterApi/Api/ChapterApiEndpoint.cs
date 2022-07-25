@@ -362,33 +362,55 @@ namespace ChapterApi.Api
                 //_logger.Info(item.Name + "(" + item.InternalId + ")");
                 Dictionary<string, object> info = new Dictionary<string, object>();
                 info.Add("Id", episode.InternalId);
-                info.Add("Name", episode.Name);
                 info.Add("ItemType", episode.GetType().Name);
 
+                string ep_no = (episode.IndexNumber ?? 0).ToString("D2");
+                info.Add("Name", ep_no + " - " + episode.Name);
+
                 TimeSpan? intro_start = null;
+                int intro_start_index = -1;
+                string intro_start_image_tag = null;
+
                 TimeSpan? intro_end = null;
+                int intro_end_index = -1;
+                string intro_end_image_tag = null;
+
                 TimeSpan? credit_start = null;
-                string intro_image_tag = null;
-                int intro_index = -1;
+                int credit_start_index = -1;
+                string credit_start_image_tag = null;
+
                 List<ChapterInfo> chapters = _ir.GetChapters(episode);
                 foreach(ChapterInfo ci in chapters)
                 {
                     if(ci.MarkerType == MarkerType.IntroStart && intro_start == null)
                     {
-                        intro_index = ci.ChapterIndex;
-                        intro_image_tag = ci.ImageTag;
+                        intro_start_index = ci.ChapterIndex;
+                        intro_start_image_tag = ci.ImageTag;
                         intro_start = new TimeSpan(ci.StartPositionTicks);
                     }
                     else if (ci.MarkerType == MarkerType.IntroEnd && intro_end == null)
                     {
+                        intro_end_index = ci.ChapterIndex;
+                        intro_end_image_tag = ci.ImageTag;
                         intro_end = new TimeSpan(ci.StartPositionTicks);
                     }
                     else if(ci.MarkerType == MarkerType.CreditsStart && credit_start == null)
                     {
+                        credit_start_index = ci.ChapterIndex;
+                        credit_start_image_tag = ci.ImageTag;
                         credit_start = new TimeSpan(ci.StartPositionTicks);
                     }
                 }
 
+                // add chapter image info
+                info.Add("IntroStartIndex", intro_start_index);
+                info.Add("IntroStartImageTag", intro_start_image_tag);
+                info.Add("IntroEndIndex", intro_end_index);
+                info.Add("IntroEndImageTag", intro_end_image_tag);
+                info.Add("CreditsIndex", intro_end_index);
+                info.Add("CreditsImageTag", intro_end_image_tag);
+
+                // add intro start
                 if (intro_start != null)
                 {
                     info.Add("IntroStart", intro_start.Value.ToString(@"hh\:mm\:ss\.fff"));
@@ -398,9 +420,7 @@ namespace ChapterApi.Api
                     info.Add("IntroStart", "--:--:--.---");
                 }
 
-                info.Add("IntroIndex", intro_index);
-                info.Add("IntroImageTag", intro_image_tag);
-
+                // add intro end
                 if (intro_end != null)
                 {
                     info.Add("IntroEnd", intro_end.Value.ToString(@"hh\:mm\:ss\.fff"));
@@ -410,6 +430,7 @@ namespace ChapterApi.Api
                     info.Add("IntroEnd", "--:--:--.---");
                 }
 
+                // add intro duration
                 if (intro_start != null && intro_end != null)
                 {
                     TimeSpan duration = intro_end.Value - intro_start.Value;
@@ -420,6 +441,7 @@ namespace ChapterApi.Api
                     info.Add("IntroSpan", "--:--:--.---");
                 }
 
+                // add creits start
                 if (credit_start != null)
                 {
                     info.Add("CreditsStart", credit_start.Value.ToString(@"hh\:mm\:ss\.fff"));
@@ -431,6 +453,14 @@ namespace ChapterApi.Api
 
                 episode_list.Add(info);
             }
+
+            episode_list.Sort(delegate (Dictionary<string, object> c1, Dictionary<string, object> c2)
+            {
+                string c1_str = c1["Name"] as string;
+                string c2_str = c2["Name"] as string;
+                int cmp_restlt = string.Compare(c1_str, c2_str, comparisonType: StringComparison.OrdinalIgnoreCase);
+                return cmp_restlt;
+            });
 
             return episode_list;
         }

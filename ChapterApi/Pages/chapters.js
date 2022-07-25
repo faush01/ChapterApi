@@ -64,7 +64,10 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager', 'dialogHelper
         console.log("Play Chapter : item_info=" + JSON.stringify(item_info) + " chapter_info=" + JSON.stringify(chapter_info));
 
         var ticks_per_sec = 10000000;
-        var start_time_offset = chapter_info.StartPositionTicks - (5 * ticks_per_sec);
+        var start_time_offset = 0;
+        if (chapter_info.StartPositionTicks > (5 * ticks_per_sec)) {
+            start_time_offset = chapter_info.StartPositionTicks - (5 * ticks_per_sec);
+        }
         var chapter_start_sec = chapter_info.StartPositionTicks / ticks_per_sec;
 
         var dlg = dialogHelper.createDialog({ removeOnClose: true, size: 'small' });
@@ -102,12 +105,12 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager', 'dialogHelper
 
         var video = dlg.querySelector('video');
         var progress = dlg.querySelector('#progression');
-        var time_offset = start_time_offset / ticks_per_sec;
+        var time_offset_sec = start_time_offset / ticks_per_sec;
 
         video.addEventListener("timeupdate", function () {
-            var prog_time = "Time: " + GetTimeString(this.currentTime + time_offset);
+            var prog_time = "Time: " + GetTimeString(this.currentTime + time_offset_sec);
             progress.innerHTML = prog_time;
-            if (chapter_start_sec < (this.currentTime + time_offset)) {
+            if (chapter_start_sec < (this.currentTime + time_offset_sec)) {
                 progress.style.backgroundColor = "#00FF00";
             }
             else {
@@ -444,14 +447,14 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager', 'dialogHelper
 
                     td = document.createElement("td");
                     /*
-                    if (episode.IntroImageTag && episode.IntroImageTag !== "") {
-                        var url = "Items/" + episode.Id + "/Images/Chapter/" + episode.IntroIndex;
-                        url += "?maxWidth=480&quality=90&tag=" + episode.IntroImageTag;
+                    if (episode.IntroStartImageTag && episode.IntroStartImageTag !== "") {
+                        var url = "Items/" + episode.Id + "/Images/Chapter/" + episode.IntroStartIndex;
+                        url += "?maxWidth=480&quality=90&tag=" + episode.IntroStartImageTag;
                         var img_src = ApiClient.getUrl(url);
                         console.log(img_src);
                         var img = document.createElement("img");
                         img.src = img_src;
-                        img.style.width = "150px";
+                        img.style.width = "90px";
                         td.appendChild(img);
                         var line_break = document.createElement("br");
                         td.appendChild(line_break);
