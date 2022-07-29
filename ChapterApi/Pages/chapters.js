@@ -14,9 +14,16 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['mainTabsManager', 'connectionManager', 'playbackManager', 'dialogHelper'], function (
-    mainTabsManager, playbackManager, connectionManager, dialogHelper) {
+define(['mainTabsManager', 'dialogHelper'], function (
+    mainTabsManager, dialogHelper) {
     'use strict';
+
+    var tab_list = [
+        {
+            href: Dashboard.getConfigurationPageUrl('chapters'),
+            name: 'Chapters'
+        }
+    ];
 
     ApiClient.getApiData = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
@@ -676,22 +683,7 @@ define(['mainTabsManager', 'connectionManager', 'playbackManager', 'dialogHelper
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            //var tabs = [
-            //    {
-            //        href: Dashboard.getConfigurationPageUrl('chapters'),
-            //        name: 'Chapters'
-            //    }
-            //];
-            //mainTabsManager.setTabs(this, 0, tabs);
-
-            //var options = {};
-            //apiClient.getItem(apiClient.getCurrentUserId(), instance.id, options)
-            //var apiClient = connectionManager.getApiClient("test");
-            //var current_user = apiClient.getCurrentUserId();
-            //console.log("Current User Id : " + JSON.stringify(current_user));
-            //var media_source = playbackManager.getPlaybackMediaSources(item)
-            //var supported = playbackManager.getSupportedCommands();
-            //console.log(JSON.stringify(supported));
+            mainTabsManager.setTabs(this, 0, tab_list);
 
             var add_chapter_button = view.querySelector('#add_chapter_button');
             add_chapter_button.addEventListener("click", function () { AddChapter(view); });
