@@ -18,12 +18,16 @@ define(['mainTabsManager', 'dialogHelper'], function (
     mainTabsManager, dialogHelper) {
     'use strict';
 
-    var tab_list = [
-        {
-            href: Dashboard.getConfigurationPageUrl('chapters'),
-            name: 'Chapters'
-        }
-    ];
+    function getTabList() {
+        var tab_list = [
+            {
+                href: Dashboard.getConfigurationPageUrl('chapters'),
+                name: 'Chapters'
+            }
+        ];
+        return tab_list;
+    }
+
 
     ApiClient.getApiData = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
@@ -683,7 +687,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            mainTabsManager.setTabs(this, 0, tab_list);
+            mainTabsManager.setTabs(this, 0, getTabList);
 
             var add_chapter_button = view.querySelector('#add_chapter_button');
             add_chapter_button.addEventListener("click", function () { AddChapter(view); });
