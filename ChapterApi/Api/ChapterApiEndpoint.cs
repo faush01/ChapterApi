@@ -86,6 +86,15 @@ namespace ChapterApi.Api
         public int auto_interval { set; get; }
     }
 
+    // http://localhost:8096/emby/chapter_api/get_summary
+    [Route("/chapter_api/get_summary", "GET", Summary = "Get a list of items for type and filtered")]
+    [Authenticated]
+    public class GetSummary : IReturn<Object>
+    {
+        [ApiMember(Name = "type", Description = "summary type", IsRequired = true, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string type { get; set; }
+    }
+
     public class ChapterApiEndpoint : IService, IRequiresRequest
     {
         private readonly ISessionManager _sessionManager;
@@ -125,6 +134,141 @@ namespace ChapterApi.Api
         }
 
         public IRequest Request { get; set; }
+
+        private Dictionary<string, object> GetSeasonSummary(BaseItem item)
+        {
+            Dictionary<string, object> summary = new Dictionary<string, object>();
+
+            InternalItemsQuery query = new InternalItemsQuery();
+            query.IsVirtualItem = false;
+            query.IncludeItemTypes = new string[] { "Episode" };
+            query.Recursive = true;
+            query.ParentIds = new long[] { item.InternalId };
+
+            BaseItem[] episodes = _libraryManager.GetItemList(query);
+
+            int episode_count = 0;
+            int with_intro_count = 0;
+            int with_credits_count = 0;
+
+            foreach (BaseItem episode in episodes)
+            {
+                episode_count++;
+                long intro_start = -1;
+                long intro_end = -1;
+                long credits = -1;
+
+                List<ChapterInfo> chapters = _ir.GetChapters(episode);
+                foreach (ChapterInfo ci in chapters)
+                {
+                    if(intro_start == -1 && ci.MarkerType == MarkerType.IntroStart)
+                    {
+                        intro_start = ci.StartPositionTicks;
+                    }
+                    else if(intro_end == -1 && ci.MarkerType == MarkerType.IntroEnd)
+                    {
+                        intro_end = ci.StartPositionTicks;
+                    }
+                    else if(credits == -1 && ci.MarkerType == MarkerType.CreditsStart)
+                    {
+                        credits = ci.StartPositionTicks;
+                    }
+                }
+
+                if(intro_start != -1 && intro_end != -1 && intro_start < intro_end)
+                {
+                    with_intro_count++;
+                }
+
+                if(credits != -1)
+                {
+                    with_credits_count++;
+                }
+            }
+
+            summary.Add("EpisodeCount", episode_count);
+            summary.Add("IntroCount", with_intro_count);
+            summary.Add("CreditsCount", with_credits_count);
+
+            return summary;
+        }
+
+        private List<Dictionary<string, object>> GetSeriesSummary(BaseItem item)
+        {
+            List<Dictionary<string, object>> season_data = new List<Dictionary<string, object>>();
+
+            InternalItemsQuery query = new InternalItemsQuery();
+            query.IsVirtualItem = false;
+            query.IncludeItemTypes = new string[] { "Season" };
+            query.Recursive = true;
+            query.ParentIds = new long[] { item.InternalId };
+
+            (string, SortOrder)[] ord = new (string, SortOrder)[1];
+            ord[0] = ("SortName", SortOrder.Ascending);
+            query.OrderBy = ord;
+
+            BaseItem[] seasons = _libraryManager.GetItemList(query);
+
+            foreach (BaseItem season in seasons)
+            {
+                Dictionary<string, object> season_info = new Dictionary<string, object>();
+                season_info.Add("Name", season.Name);
+
+                Dictionary<string, object> summary = GetSeasonSummary(season);
+                foreach(KeyValuePair<string, object> x in summary)
+                {
+                    season_info.Add(x.Key, x.Value);
+                }
+
+                season_data.Add(season_info);
+            }
+
+            return season_data;
+        }
+
+        public object Get(GetSummary request)
+        {
+            List<Dictionary<string, object>> summary_data = new List<Dictionary<string, object>>();
+
+            InternalItemsQuery query = new InternalItemsQuery();
+            query.IsVirtualItem = false;
+
+            query.IncludeItemTypes = new string[] { "Series" };
+            query.Recursive = true;
+
+            (string, SortOrder)[] ord = new (string, SortOrder)[1];
+            ord[0] = ("SortName", SortOrder.Ascending);
+            query.OrderBy = ord;
+
+            BaseItem[] results = _libraryManager.GetItemList(query);
+
+            foreach (BaseItem item in results)
+            {
+                Dictionary<string, object> item_info = new Dictionary<string, object>();
+                item_info.Add("Name", item.Name);
+
+                List<Dictionary<string, object>> season_data = GetSeriesSummary(item);
+                item_info.Add("Seasons", season_data);
+
+                // add series level summary data
+                int episode_count = 0;
+                int intro_count = 0;
+                int credits_count = 0;
+                foreach(Dictionary<string, object> season in season_data)
+                {
+                    episode_count += (int)season["EpisodeCount"];
+                    intro_count += (int)season["IntroCount"];
+                    credits_count += (int)season["CreditsCount"];
+                }
+                item_info.Add("EpisodeCount", episode_count);
+                item_info.Add("IntroCount", intro_count);
+                item_info.Add("CreditsCount", credits_count);
+
+                summary_data.Add(item_info);
+            }
+
+            return summary_data;
+        }
 
         public object Get(GetItemPath request)
         {

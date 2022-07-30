@@ -23,6 +23,10 @@ define(['mainTabsManager', 'dialogHelper'], function (
             {
                 href: Dashboard.getConfigurationPageUrl('chapters'),
                 name: 'Chapters'
+            },
+            {
+                href: Dashboard.getConfigurationPageUrl('summary'),
+                name: 'Intro Summary'
             }
         ];
         return tab_list;
