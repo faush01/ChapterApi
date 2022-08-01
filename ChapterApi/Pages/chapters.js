@@ -18,6 +18,8 @@ define(['mainTabsManager', 'dialogHelper'], function (
     mainTabsManager, dialogHelper) {
     'use strict';
 
+    var ticks_per_sec = 10000000;
+
     function getTabList() {
         var tab_list = [
             {
@@ -78,7 +80,6 @@ define(['mainTabsManager', 'dialogHelper'], function (
         //alert("play");
         console.log("Play Chapter : item_info=" + JSON.stringify(item_info) + " chapter_info=" + JSON.stringify(chapter_info));
 
-        var ticks_per_sec = 10000000;
         var start_time_offset = 0;
         if (chapter_info.StartPositionTicks > (5 * ticks_per_sec)) {
             start_time_offset = chapter_info.StartPositionTicks - (5 * ticks_per_sec);
@@ -552,6 +553,33 @@ define(['mainTabsManager', 'dialogHelper'], function (
                     td.style.padding = cell_padding;
                     td.style.overflow = "hidden";
                     td.style.whiteSpace = "nowrap";
+                    tr.appendChild(td);
+
+                    td = document.createElement("td");
+
+                    if (intro_start && intro_end) {
+                        var intro_duration = (intro_end.TimeTicks - intro_start.TimeTicks) / ticks_per_sec;
+                        if (intro_duration > 10 && intro_duration < 300) {
+                            var link = document.createElement("a");
+
+                            link.style.color = "inherit";
+
+                            var export_link = "chapter_api/extract_theme?id=" + episode.Id;
+                            export_link += "&stamp=" + new Date().getTime();
+                            export_link = ApiClient.getUrl(export_link);
+                            link.href = export_link;
+
+                            var i = document.createElement("i");
+                            i.title = "Extract Intro Chromaprint";
+                            i.className = "md-icon";
+                            i.style.fontSize = "25px";
+                            //i.style.cursor = "pointer";
+                            i.appendChild(document.createTextNode("file_download"));
+                            link.appendChild(i);
+                            td.appendChild(link);
+                        }
+                    }
+
                     tr.appendChild(td);
 
                     if (row_count % 2 === 0) {
