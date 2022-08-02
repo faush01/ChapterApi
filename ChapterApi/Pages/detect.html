@@ -1,0 +1,37 @@
+﻿<div data-role="page" class="page type-interior pluginConfigurationPage withTabs"
+     data-require="emby-button,emby-select,emby-checkbox,emby-linkbutton,emby-input"
+     data-controller="__plugin/detect.js">
+    <div data-role="content">
+        <div class="content-primary">
+            <div>Detect Intros</div>
+
+            <table>
+                <tr>
+                    <td>Series</td>
+                    <td><select id="series_list"></select></td>
+                </tr>
+                <tr>
+                    <td>Season</td>
+                    <td><select id="season_list"></select></td>
+                </tr>
+                <tr>
+                    <td>Chromaprint file</td>
+                    <td><input type="file" id="theme_info_file" /></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><button id="run_detection">Run</button></td>
+                </tr>
+            </table>
+
+            <br />
+            <div id="detection_status"></div>
+            <br />
+
+            <table id="detection_results_table">
+            </table>
+
+
+        </div>
+    </div>
+</div>

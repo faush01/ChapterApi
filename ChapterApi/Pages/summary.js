@@ -27,6 +27,10 @@ define(['mainTabsManager', 'dialogHelper'], function (
             {
                 href: Dashboard.getConfigurationPageUrl('summary'),
                 name: 'Intro Summary'
+            },
+            {
+                href: Dashboard.getConfigurationPageUrl('detect'),
+                name: 'Intro Detect'
             }
         ];
         return tab_list;

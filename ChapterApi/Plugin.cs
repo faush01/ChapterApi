@@ -62,6 +62,16 @@ namespace ChapterApi
                 {
                     Name = "summary.js",
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.summary.js"
+                },
+                new PluginPageInfo
+                {
+                    Name = "detect",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.detect.html",
+                },
+                new PluginPageInfo
+                {
+                    Name = "detect.js",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.detect.js"
                 }
             };
         }

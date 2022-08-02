@@ -9,12 +9,16 @@
   <None Remove="Media\logo.png" />
   <None Remove="Pages\chapters.html" />
   <None Remove="Pages\chapters.js" />
+  <None Remove="Pages\detect.html" />
+  <None Remove="Pages\detect.js" />
   <None Remove="Pages\summary.html" />
   <None Remove="Pages\summary.js" />
 </ItemGroup>
 
 <ItemGroup>
   <EmbeddedResource Include="Media\logo.png" />
+  <EmbeddedResource Include="Pages\detect.js" />
+  <EmbeddedResource Include="Pages\detect.html" />
   <EmbeddedResource Include="Pages\summary.js" />
   <EmbeddedResource Include="Pages\summary.html" />
   <EmbeddedResource Include="Pages\chapters.html" />
