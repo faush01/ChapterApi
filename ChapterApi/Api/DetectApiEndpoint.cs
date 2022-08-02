@@ -270,6 +270,9 @@ namespace ChapterApi.Api
             detection_results.Add("Name", episode.Name);
             detection_results.Add("Id", episode.InternalId);
 
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+
             _logger.Info("Extracted CP from : " + episode.Name);
             byte[] episode_cp_data = ExtractChromaprint(duration, episode.Path);
             _logger.Info("Extracted CP data length : " + episode_cp_data.Length);
@@ -278,6 +281,10 @@ namespace ChapterApi.Api
 
             FindBestOffset(episode_cp_data, duration, theme_cp_byte_data, detection_results);
 
+            stopWatch.Stop();
+            TimeSpan ts = stopWatch.Elapsed;
+
+            detection_results.Add("Time", ts.ToString(@"hh\:mm\:ss\.fff"));
         }
 
         public object Post(DetectSeasonIntros request)
@@ -355,6 +362,9 @@ namespace ChapterApi.Api
                 episode_info.Add("Name", episode.Name);
                 episode_info.Add("Id", episode.InternalId);
 
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
+
                 _logger.Info("Extracted CP from : " + episode.Name);
                 byte[] episode_cp_data = ExtractChromaprint(duration, episode.Path);
                 _logger.Info("Extracted CP data length : " + episode_cp_data.Length);
@@ -362,6 +372,11 @@ namespace ChapterApi.Api
                 episode_info.Add("CpDataLen", episode_cp_data.Length);
 
                 FindBestOffset(episode_cp_data, duration, theme_cp_byte_data, episode_info);
+
+                stopWatch.Stop();
+                TimeSpan ts = stopWatch.Elapsed;
+
+                episode_info.Add("Time", ts.ToString(@"hh\:mm\:ss\.fff"));
 
                 episode_results.Add(episode_info);
             }
@@ -432,8 +447,6 @@ namespace ChapterApi.Api
             return chroma_bytes;
         }
 
-
-
         private bool FindBestOffset(
             byte[] episode_cp_bytes, 
             TimeSpan duration, 
@@ -473,11 +486,11 @@ namespace ChapterApi.Api
             // also remember we are using int offsets, this is 4 bytes, we could get better
             // granularity by comparing bytes for byte and use actual byte offsets in our best match
 
-            int theme_start = (int)(best_start_offset / ints_per_sec);
-            TimeSpan ts_start = new TimeSpan(0, 0, theme_start);
+            double theme_start = best_start_offset.Value / ints_per_sec;
+            TimeSpan ts_start = TimeSpan.FromSeconds(theme_start);
 
-            int theme_end = theme_start + (int)(theme_cp_uints.Count / ints_per_sec);
-            TimeSpan ts_end = new TimeSpan(0, 0, theme_end);
+            double theme_end = theme_start + (theme_cp_uints.Count / ints_per_sec);
+            TimeSpan ts_end = TimeSpan.FromSeconds(theme_end);
 
             episode_info.Add("StartTime", ts_start.ToString(@"hh\:mm\:ss\.fff"));
             episode_info.Add("StartTimeTicks", ts_start.Ticks);

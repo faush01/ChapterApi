@@ -64,8 +64,29 @@ define(['mainTabsManager', 'dialogHelper'], function (
     function CreateResultNode(result) {
 
         var tr = document.createElement("tr");
+
         var td = document.createElement("td");
-        td.appendChild(document.createTextNode(result.Name + " " + result.Result));
+        td.appendChild(document.createTextNode(result.Name));
+        tr.appendChild(td);
+
+        var td = document.createElement("td");
+        td.appendChild(document.createTextNode(result.StartTime));
+        tr.appendChild(td);
+
+        var td = document.createElement("td");
+        td.appendChild(document.createTextNode(result.EndTime));
+        tr.appendChild(td);
+
+        var td = document.createElement("td");
+        td.appendChild(document.createTextNode(result.Duration));
+        tr.appendChild(td);
+
+        var td = document.createElement("td");
+        td.appendChild(document.createTextNode(result.Time));
+        tr.appendChild(td);
+        
+        td = document.createElement("td");
+        td.appendChild(document.createTextNode(result.Result));
         tr.appendChild(td);
 
         return tr;
