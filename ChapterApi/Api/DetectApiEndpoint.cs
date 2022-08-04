@@ -37,17 +37,14 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChapterApi.Api
+namespace ChapterApi
 {
-
-    // http://localhost:8096/emby/chapter_api/get_series_list
     [Route("/chapter_api/get_series_list", "GET", Summary = "Get list of series")]
     [Authenticated]
     public class GetSeriesList : IReturn<Object>
     {
     }
 
-    // http://localhost:8096/emby/chapter_api/get_season_list
     [Route("/chapter_api/get_season_list", "GET", Summary = "Get list of seasons")]
     [Authenticated]
     public class GetSeasonList : IReturn<Object>
@@ -55,7 +52,6 @@ namespace ChapterApi.Api
         public int id { get; set; }
     }
 
-    // http://localhost:8096/emby/chapter_api/get_episode_list
     [Route("/chapter_api/get_episode_list", "GET", Summary = "Get list of episodes")]
     [Authenticated]
     public class GetEpisodeList : IReturn<Object>
@@ -63,22 +59,40 @@ namespace ChapterApi.Api
         public int id { get; set; }
     }
 
-    // http://localhost:8096/emby/chapter_api/detect_season_intros
-    [Route("/chapter_api/detect_season_intros", "POST", Summary = "Detect the intros")]
+    [Route("/chapter_api/add_detection_job", "POST", Summary = "Add detection job")]
     //[Authenticated]
-    public class DetectSeasonIntros : IReturn<Object>
+    public class AddDetectionJob : IReturn<Object>
     {
         public string IntroInfo { get; set; }
-        public int SeasonId { get; set; }
+        public int ItemId { get; set; }
+        public string JobType { get; set; }
     }
 
-    // http://localhost:8096/emby/chapter_api/detect_episode_intro
-    [Route("/chapter_api/detect_episode_intro", "POST", Summary = "Detect the intros")]
+    [Route("/chapter_api/get_job_list", "GET", Summary = "Get list of jobs")]
     //[Authenticated]
-    public class DetectEpisodeIntro : IReturn<Object>
+    public class GetJobList : IReturn<Object>
     {
-        public string IntroInfo { get; set; }
-        public int EpisodeId { get; set; }
+    }
+
+    [Route("/chapter_api/get_job_info", "GET", Summary = "Get job info")]
+    //[Authenticated]
+    public class GetJobInfo : IReturn<Object>
+    {
+        public string id { get; set; }
+    }
+
+    [Route("/chapter_api/cancel_job", "GET", Summary = "Cancel a job")]
+    //[Authenticated]
+    public class CancelJob : IReturn<Object>
+    {
+        public string id { get; set; }
+    }
+
+    [Route("/chapter_api/remove_job", "GET", Summary = "Remove a job")]
+    //[Authenticated]
+    public class RemoveJob : IReturn<Object>
+    {
+        public string id { get; set; }
     }
 
     public class DetectApiEndpoint : IService, IRequiresRequest
@@ -95,6 +109,8 @@ namespace ChapterApi.Api
         private readonly IItemRepository _ir;
         private readonly IFfmpegManager _ffmpeg;
         private readonly IHttpResultFactory _hrf;
+
+        private JobManager _jm;
 
         public DetectApiEndpoint(ILogManager logger,
             IFileSystem fileSystem,
@@ -121,6 +137,8 @@ namespace ChapterApi.Api
             _ir = itemRepository;
             _ffmpeg = ffmpegManager;
             _hrf = httpResultFactory;
+
+            _jm = JobManager.GetInstance(_logger);
 
             _logger.Info("ChapterApi - DetectApiEndpoint Loaded");
         }
@@ -203,19 +221,115 @@ namespace ChapterApi.Api
             return series_list;
         }
 
-        public object Post(DetectEpisodeIntro request)
+        public object Get(GetJobList request)
         {
-            Dictionary<string, object> detection_results = new Dictionary<string, object>();
+            List<Dictionary<string, object>> job_list = new List<Dictionary<string, object>>();
 
-            _logger.Info("EpisodeId    : " + request.EpisodeId);
+            Dictionary<string, DetectionJob> jobs = _jm.GetJobList();
+
+            foreach(string job_id in jobs.Keys)
+            {
+                DetectionJob job = jobs[job_id];
+                Dictionary<string, object> job_info = new Dictionary<string, object>();
+
+                job_info.Add("Id", job_id);
+                job_info.Add("Name", job.name);
+                job_info.Add("Count", job.items.Count);
+                job_info.Add("Status", job.status);
+
+                job_list.Add(job_info);
+            }
+
+            return job_list;
+        }
+
+        public object Get(GetJobInfo request)
+        {
+            Dictionary<string, object> job_info = new Dictionary<string, object>();
+            Dictionary<string, DetectionJob> jobs = _jm.GetJobList();
+
+            if(jobs.ContainsKey(request.id))
+            {
+                DetectionJob job = jobs[request.id];
+
+                job_info.Add("Id", request.id);
+                job_info.Add("Name", job.name);
+                job_info.Add("Status", job.status);
+                job_info.Add("Added", job.added.ToString("yyyy-MM-dd HH:mm:ss"));
+                job_info.Add("ItemCount", job.items.Count);
+
+                List<Dictionary<string, object>> job_items = new List<Dictionary<string, object>>();
+
+                foreach(DetectionJobItem job_item in job.items)
+                {
+                    Dictionary<string, object> job_item_info = new Dictionary<string, object>();
+
+                    job_item_info.Add("Name", job_item.item.Name);
+                    job_item_info.Add("Status", job_item.status);
+                    job_item_info.Add("Found", job_item.found_intro);
+                    job_item_info.Add("StartTime", job_item.start_time);
+                    job_item_info.Add("EndTime", job_item.end_time);
+                    job_item_info.Add("Duration", job_item.duration_time);
+                    job_item_info.Add("Time", job_item.detection_duration);
+
+                    job_items.Add(job_item_info);
+                }
+
+                job_info.Add("Items", job_items);
+            }
+
+            return job_info;
+        }
+
+        public object Get(CancelJob request)
+        {
+            Dictionary<string, object> cancel_result = new Dictionary<string, object>();
+
+            bool result = _jm.CancelJob(request.id);
+
+            if (result)
+            {
+                cancel_result.Add("Result", "Canceled");
+            }
+            else
+            {
+                cancel_result.Add("Result", "Already Canceled");
+            }
+
+            return cancel_result;
+        }
+
+        public object Get(RemoveJob request)
+        {
+            Dictionary<string, object> remove_result = new Dictionary<string, object>();
+
+            bool result = _jm.RemoveJob(request.id);
+            if (result)
+            {
+                remove_result.Add("Result", "Removed");
+            }
+            else
+            {
+                remove_result.Add("Result", "Not Found");
+            }
+
+            return remove_result;
+        }
+
+        public object Post(AddDetectionJob request)
+        {
+            Dictionary<string, object> add_result = new Dictionary<string, object>();
+
+            _logger.Info("ItemId      : " + request.ItemId);
+            _logger.Info("JobType     : " + request.JobType);
 
             IntroInfo intro_cp_info = _jsonSerializer.DeserializeFromString(request.IntroInfo, typeof(IntroInfo)) as IntroInfo;
 
             if (intro_cp_info == null)
             {
-                detection_results.Add("Status", "Failed");
-                detection_results.Add("Message", "Failed to extract chromaprint data from submitted file");
-                return detection_results;
+                add_result.Add("Status", "Failed");
+                add_result.Add("Message", "Failed to extract chromaprint data from submitted file");
+                return add_result;
             }
 
             _logger.Info("series      : " + intro_cp_info.series);
@@ -239,374 +353,53 @@ namespace ChapterApi.Api
 
             if (intro_cp_info.cp_data_md5 != cp_md5)
             {
-                detection_results.Add("Status", "Failed");
-                detection_results.Add("Message", "MD5 mismatch");
-                return detection_results;
+                add_result.Add("Status", "Failed");
+                add_result.Add("Message", "MD5 mismatch");
+                return add_result;
             }
 
-            ProcessEpisode(
-                detection_results, 
-                request.EpisodeId, 
-                intro_cp_info, 
-                cp_byte_data);
+            DetectionJob job = new DetectionJob();
+            job.ffmpeg_path = _ffmpeg.FfmpegConfiguration.EncoderPath;
+            job.intro_info = intro_cp_info;
+            job.intro_cp_data = cp_byte_data;
 
-            detection_results.Add("Status", "Ok");
-            return detection_results;
-        }
-
-        private void ProcessEpisode(
-            Dictionary<string, object> detection_results,
-            long episode_id,
-            IntroInfo intro_cp_info,
-            byte[] theme_cp_byte_data)
-        {
-
-            Guid item_guid = _libraryManager.GetGuid(episode_id);
-            BaseItem episode = _libraryManager.GetItemById(item_guid);
-
-            TimeSpan duration = TimeSpan.FromSeconds(intro_cp_info.extract);
-            _logger.Info("Extracting cp data for first " + duration.TotalSeconds + " seconds of episode");
-
-            detection_results.Add("Name", episode.Name);
-            detection_results.Add("Id", episode.InternalId);
-
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-
-            _logger.Info("Extracted CP from : " + episode.Name);
-            byte[] episode_cp_data = ExtractChromaprint(duration, episode.Path);
-            _logger.Info("Extracted CP data length : " + episode_cp_data.Length);
-
-            detection_results.Add("CpDataLen", episode_cp_data.Length);
-
-            FindBestOffset(episode_cp_data, duration, theme_cp_byte_data, detection_results);
-
-            stopWatch.Stop();
-            TimeSpan ts = stopWatch.Elapsed;
-
-            detection_results.Add("Time", ts.ToString(@"hh\:mm\:ss\.fff"));
-        }
-
-        public object Post(DetectSeasonIntros request)
-        {
-            Dictionary<string, object> detection_results = new Dictionary<string, object>();
-
-            //_logger.Info("IntroInfo   : " + request.IntroInfo);
-            _logger.Info("SeasonId    : " + request.SeasonId);
-
-            IntroInfo intro_cp_info = _jsonSerializer.DeserializeFromString(request.IntroInfo, typeof(IntroInfo)) as IntroInfo;
-
-            if(intro_cp_info == null)
+            if(request.JobType == "series" || request.JobType == "season")
             {
-                detection_results.Add("Status", "Failed");
-                detection_results.Add("Message", "Failed to extract chromaprint data from submitted file");
-                return detection_results;
-            }
+                job.name = intro_cp_info.series;
 
-            _logger.Info("series      : " + intro_cp_info.series);
-            _logger.Info("season      : " + intro_cp_info.season);
-            _logger.Info("tvdb        : " + intro_cp_info.tvdb);
-            _logger.Info("imdb        : " + intro_cp_info.imdb);
-            _logger.Info("tmdb        : " + intro_cp_info.tmdb);
-            _logger.Info("duration    : " + intro_cp_info.duration);
-            _logger.Info("extract     : " + intro_cp_info.extract);
-            _logger.Info("cp_data_md5 : " + intro_cp_info.cp_data_md5);
-            _logger.Info("cp_data     : " + intro_cp_info.cp_data);
-
-            byte[] cp_byte_data = Convert.FromBase64String(intro_cp_info.cp_data);
-
-            string cp_md5 = "";
-            using (MD5 md5 = MD5.Create())
-            {
-                byte[] hashBytes = md5.ComputeHash(cp_byte_data);
-                cp_md5 = BitConverter.ToString(hashBytes).Replace("-", "").ToUpper();
-            }
-
-            if(intro_cp_info.cp_data_md5 != cp_md5)
-            {
-                detection_results.Add("Status", "Failed");
-                detection_results.Add("Message", "MD5 mismatch");
-                return detection_results;
-            }
-
-            ProcessSeason(
-                detection_results,
-                request.SeasonId,
-                intro_cp_info,
-                cp_byte_data);
-
-            detection_results.Add("Status", "Ok");
-            return detection_results;
-        }
-
-        private void ProcessSeason(
-            Dictionary<string, object> detection_results, 
-            int season_id,
-            IntroInfo intro_cp_info,
-            byte[] theme_cp_byte_data)
-        {
-            InternalItemsQuery query = new InternalItemsQuery();
-            query.IncludeItemTypes = new string[] { "Episode" };
-            query.ParentIds = new long[] { season_id };
-            BaseItem[] episode_list = _libraryManager.GetItemList(query);
-
-            TimeSpan duration = TimeSpan.FromSeconds(intro_cp_info.extract);
-            _logger.Info("Extracting cp data for first " + duration.TotalSeconds + " seconds of episode");
-
-            List<Dictionary<string, object>> episode_results = new List<Dictionary<string, object>>();
-
-            foreach (BaseItem episode in episode_list)
-            {
-                Dictionary<string, object> episode_info = new Dictionary<string, object>();
-
-                episode_info.Add("Name", episode.Name);
-                episode_info.Add("Id", episode.InternalId);
-
-                Stopwatch stopWatch = new Stopwatch();
-                stopWatch.Start();
-
-                _logger.Info("Extracted CP from : " + episode.Name);
-                byte[] episode_cp_data = ExtractChromaprint(duration, episode.Path);
-                _logger.Info("Extracted CP data length : " + episode_cp_data.Length);
-
-                episode_info.Add("CpDataLen", episode_cp_data.Length);
-
-                FindBestOffset(episode_cp_data, duration, theme_cp_byte_data, episode_info);
-
-                stopWatch.Stop();
-                TimeSpan ts = stopWatch.Elapsed;
-
-                episode_info.Add("Time", ts.ToString(@"hh\:mm\:ss\.fff"));
-
-                episode_results.Add(episode_info);
-            }
-
-            detection_results.Add("Episodes", episode_results);
-        }
-
-        private byte[] ExtractChromaprint(
-            TimeSpan ts_duration,
-            string media_path
-            )
-        {
-            //TimeSpan ts_start = TimeSpan.FromSeconds(20);
-            //TimeSpan ts_end = TimeSpan.FromSeconds(90);
-            //TimeSpan ts_duration = ts_end - ts_start;
-
-            string ffmpeg_path = _ffmpeg.FfmpegConfiguration.EncoderPath;
-            //string ffmpeg_path = _config.CommonApplicationPaths.ProgramSystemPath;
-            //ffmpeg_path = Path.Combine(ffmpeg_path, "ffmpeg");
-
-            List<string> command_params = new List<string>();
-
-            command_params.Add("-accurate_seek");
-            //command_params.Add(string.Format("-ss {0}", ts_start));
-            command_params.Add(string.Format("-t {0}", ts_duration));
-            command_params.Add("-i \"" + media_path + "\"");
-            command_params.Add("-ac 1");
-            command_params.Add("-acodec pcm_s16le");
-            command_params.Add("-ar 16000");
-            command_params.Add("-c:v nul");
-            command_params.Add("-f chromaprint");
-            command_params.Add("-fp_format raw");
-            command_params.Add("-");
-
-            string param_string = string.Join(" ", command_params);
-
-            _logger.Info("Extracting chromaprint : " + ffmpeg_path + " " + param_string);
-
-            ProcessStartInfo start_info = new ProcessStartInfo(ffmpeg_path, param_string);
-            start_info.RedirectStandardOutput = true;
-            start_info.RedirectStandardError = false;
-            start_info.UseShellExecute = false;
-            start_info.CreateNoWindow = true;
-
-            byte[] chroma_bytes = new byte[0];
-            int return_code = -1;
-            using (Process process = new Process() { StartInfo = start_info })
-            {
-                process.Start();
-
-                FileStream baseStream = process.StandardOutput.BaseStream as FileStream;
-                using (MemoryStream ms = new MemoryStream())
+                // get item list
+                InternalItemsQuery query = new InternalItemsQuery();
+                query.Recursive = true;
+                query.IncludeItemTypes = new string[] { "Episode" };
+                query.ParentIds = new long[] { request.ItemId };
+                BaseItem[] episode_list = _libraryManager.GetItemList(query);
+                foreach (BaseItem episode in episode_list)
                 {
-                    int last_read = 0;
-                    byte[] buffer = new byte[4096];
-                    do
-                    {
-                        last_read = baseStream.Read(buffer, 0, buffer.Length);
-                        ms.Write(buffer, 0, last_read);
-                    } while (last_read > 0);
-
-                    chroma_bytes = ms.ToArray();
+                    DetectionJobItem job_item = new DetectionJobItem();
+                    job_item.item = episode;
+                    job.items.Add(job_item);
                 }
 
-                return_code = process.ExitCode;
             }
-
-            return chroma_bytes;
-        }
-
-        private bool FindBestOffset(
-            byte[] episode_cp_bytes, 
-            TimeSpan duration, 
-            byte[] theme_cp_bytes,
-            Dictionary<string, object> episode_info)
-        {
-            List<uint> episode_cp_uints = BytesToInts(episode_cp_bytes);
-            List<uint> theme_cp_uints = BytesToInts(theme_cp_bytes);
-
-            if (episode_cp_uints.Count == 0 || theme_cp_uints.Count == 0 || theme_cp_uints.Count > episode_cp_uints.Count)
+            else if(request.JobType == "episode")
             {
-                _logger.Info("Error with cp data : episode[" + episode_cp_uints.Count + "] theme[" + theme_cp_uints.Count + "]");
-                return false;
+                job.name = intro_cp_info.series;
+
+                Guid item_guid = _libraryManager.GetGuid(request.ItemId);
+                BaseItem episode = _libraryManager.GetItemById(item_guid);
+
+                DetectionJobItem job_item = new DetectionJobItem();
+                job_item.item = episode;
+                job.items.Add(job_item);
             }
 
-            List<uint> distances = GetDistances(episode_cp_uints, theme_cp_uints);
+            add_result.Add("ItemCount", job.items.Count);
 
-            int? best_start_offset = GetBestOffset(distances, episode_info);
+            _jm.AddJob(job);
 
-            if (best_start_offset == null)
-            {
-                episode_info.Add("Result", false);
-                _logger.Info("Theme not found!");
-                return false;
-            }
+            add_result.Add("Status", "Added");
 
-            episode_info.Add("Result", true);
-
-            // based on testing it looks like it is about 8.06 ints per second
-            // based on the options used in the ffmpeg audio mixing and cp muxing
-            // TODO: this need further investigation
-            // https://github.com/acoustid/chromaprint/issues/45
-            // double ints_per_sec = 8.06; // this is calculated by extracting a bunch of test data and comparing them
-            // for now lets use the duration and extracted byte array length to calculate this 
-            double ints_per_sec = (episode_cp_bytes.Length / duration.TotalSeconds) / 4;
-
-            // also remember we are using int offsets, this is 4 bytes, we could get better
-            // granularity by comparing bytes for byte and use actual byte offsets in our best match
-
-            double theme_start = best_start_offset.Value / ints_per_sec;
-            TimeSpan ts_start = TimeSpan.FromSeconds(theme_start);
-
-            double theme_end = theme_start + (theme_cp_uints.Count / ints_per_sec);
-            TimeSpan ts_end = TimeSpan.FromSeconds(theme_end);
-
-            episode_info.Add("StartTime", ts_start.ToString(@"hh\:mm\:ss\.fff"));
-            episode_info.Add("StartTimeTicks", ts_start.Ticks);
-
-            episode_info.Add("EndTime", ts_end.ToString(@"hh\:mm\:ss\.fff"));
-            episode_info.Add("EndTimeTicks", ts_end.Ticks);
-
-            TimeSpan into_duration = ts_end - ts_start;
-
-            episode_info.Add("Duration", into_duration.ToString(@"hh\:mm\:ss\.fff"));
-            episode_info.Add("DurationTicks", into_duration.Ticks);
-
-            _logger.Info("Theme At : " + ts_start + " - " + ts_end);
-
-            return true;
-        }
-
-        private int? GetBestOffset(List<uint> distances,Dictionary<string, object> episode_info)
-        {
-            uint sum_distances = 0;
-            uint min_dist = uint.MaxValue;
-            int? min_offset = null;
-            for (int x = 0; x < distances.Count; x++)
-            {
-                sum_distances += distances[x];
-                if (distances[x] < min_dist)
-                {
-                    min_dist = distances[x];
-                    min_offset = x;
-                }
-            }
-
-            double average_distance = sum_distances / distances.Count;
-            uint distance_threshold = (uint)(average_distance * 0.5);  // TODO: find a good threshold
-
-            episode_info.Add("MinDistance", min_dist);
-            episode_info.Add("AverageDistance", average_distance);
-            episode_info.Add("DistanceThreshold", distance_threshold);
-            episode_info.Add("MinDistanceOffset", min_offset);
-
-            _logger.Info("Min Distance        : " + min_dist);
-            _logger.Info("Average Distance    : " + average_distance);
-            _logger.Info("Distance Threshold  : " + distance_threshold);
-            _logger.Info("Min Distance Offset : " + min_offset);
-
-            if (min_dist > distance_threshold)
-            {
-                episode_info.Add("MinDistanceFound", false);
-                _logger.Info("Min distance was not below average distance threshold!");
-                return null;
-            }
-
-            episode_info.Add("MinDistanceFound", true);
-
-            return min_offset;
-        }
-
-        private List<uint> BytesToInts(byte[] cp_byte_data)
-        {
-            List<uint> cp_data = new List<uint>();
-            if (cp_byte_data.Length == 0 || cp_byte_data.Length % 4 != 0)
-            {
-                return cp_data;
-            }
-            using (MemoryStream ms = new MemoryStream(cp_byte_data))
-            {
-                using (BinaryReader binaryReader = new BinaryReader(ms))
-                {
-                    int num = (int)binaryReader.BaseStream.Length / 4;
-                    for (int i = 0; i < num; i++)
-                    {
-                        cp_data.Add(binaryReader.ReadUInt32());
-                    }
-                }
-            }
-            return cp_data;
-        }
-
-        private List<uint> GetDistances(List<uint> episode_cp_data, List<uint> theme_cp_data)
-        {
-            List<uint> distances = new List<uint>();
-
-            int last_offset = (episode_cp_data.Count - theme_cp_data.Count) + 1;
-            for (int offset = 0; offset < last_offset; offset++)
-            {
-                uint total_distance = 0;
-                for (int x = 0; x < theme_cp_data.Count; x++)
-                {
-                    uint left = episode_cp_data[x + offset];
-                    uint right = theme_cp_data[x];
-                    uint this_score = GetHammingDist(left, right);
-                    total_distance += this_score;
-                }
-                distances.Add(total_distance);
-            }
-
-            return distances;
-        }
-
-        private uint GetHammingDist(uint left, uint right)
-        {
-            // https://stackoverflow.com/questions/1024904/calculating-hamming-weight-efficiently-in-matlab
-            // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetNaive
-            //w = bitand( bitshift(w, -1), uint32(1431655765)) + bitand(w, uint32(1431655765));
-            //w = bitand(bitshift(w, -2), uint32(858993459)) + bitand(w, uint32(858993459));
-            //w = bitand(bitshift(w, -4), uint32(252645135)) + bitand(w, uint32(252645135));
-            //w = bitand(bitshift(w, -8), uint32(16711935)) + bitand(w, uint32(16711935));
-            //w = bitand(bitshift(w, -16), uint32(65535)) + bitand(w, uint32(65535));
-
-            uint distance = left ^ right;
-            distance = ((distance >> 1) & 1431655765U) + (distance & 1431655765U);
-            distance = ((distance >> 2) & 858993459U) + (distance & 858993459U);
-            distance = ((distance >> 4) & 252645135U) + (distance & 252645135U);
-            distance = ((distance >> 8) & 16711935U) + (distance & 16711935U);
-            distance = ((distance >> 16) & 65535U) + (distance & 65535U);
-            return distance;
+            return add_result;
         }
 
     }

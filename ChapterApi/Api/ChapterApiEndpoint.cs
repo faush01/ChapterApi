@@ -32,7 +32,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ChapterApi.Api
+namespace ChapterApi
 {
     // http://localhost:8096/emby/chapter_api/get_items
     [Route("/chapter_api/get_items", "GET", Summary = "Get a list of items for type and filtered")]

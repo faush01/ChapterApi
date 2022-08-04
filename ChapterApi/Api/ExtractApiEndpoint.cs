@@ -37,7 +37,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChapterApi.Api
+namespace ChapterApi
 {
     // http://localhost:8096/emby/chapter_api/extract_theme
     [Route("/chapter_api/extract_theme", "GET", Summary = "Extract the Theme chromaprint")]

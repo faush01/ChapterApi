@@ -38,7 +38,6 @@ define(['mainTabsManager', 'dialogHelper'], function (
         return tab_list;
     }
 
-
     ApiClient.getApiData = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
         return this.ajax({
@@ -61,111 +60,64 @@ define(['mainTabsManager', 'dialogHelper'], function (
         });
     };
 
-    function CreateResultNode(result) {
-
-        var tr = document.createElement("tr");
-
-        var td = document.createElement("td");
-        td.appendChild(document.createTextNode(result.Name));
-        tr.appendChild(td);
-
-        var td = document.createElement("td");
-        td.appendChild(document.createTextNode(result.StartTime));
-        tr.appendChild(td);
-
-        var td = document.createElement("td");
-        td.appendChild(document.createTextNode(result.EndTime));
-        tr.appendChild(td);
-
-        var td = document.createElement("td");
-        td.appendChild(document.createTextNode(result.Duration));
-        tr.appendChild(td);
-
-        var td = document.createElement("td");
-        td.appendChild(document.createTextNode(result.Time));
-        tr.appendChild(td);
-        
-        td = document.createElement("td");
-        td.appendChild(document.createTextNode(result.Result));
-        tr.appendChild(td);
-
-        return tr;
-    }
-
-    async function SendRunData(view, file_content, season_id) {
-
-        //console.log(file_content);
-
-        var detection_status = view.querySelector("#detection_status");
-        var detection_results_table = view.querySelector("#detection_results_table");
-
-        // empty table
-        while (detection_results_table.firstChild) {
-            detection_results_table.removeChild(detection_results_table.firstChild);
-        }
-
-        var episode_url = "chapter_api/get_episode_list";
-        episode_url += "?id=" + season_id;
-        episode_url += "&stamp = " + new Date().getTime();
-        episode_url = ApiClient.getUrl(episode_url);
-
-        await ApiClient.getApiData(episode_url).then(async function (episode_list_data) {
-            console.log("Episode List Data: " + JSON.stringify(episode_list_data));
-            var count = 1;
-            for (const episode of episode_list_data) {
-
-                detection_status.innerHTML = "Processing : " + count + " of " + episode_list_data.length;
-
-                var query_data = {
-                    IntroInfo: file_content,
-                    EpisodeId: episode.Id
-                };
-                var url = "chapter_api/detect_episode_intro?stamp=" + new Date().getTime();
-                url = ApiClient.getUrl(url);
-
-                await ApiClient.sendPostQuery(url, query_data).then(function (result) {
-                    console.log("Episode Intro Detection Results : " + JSON.stringify(result));
-
-                    var result_row = CreateResultNode(result);
-                    detection_results_table.appendChild(result_row);
-                });
-
-                count++;
-            }
-            detection_status.innerHTML = "Processing : Done";
-        });
-
-        /*
-        var url = "chapter_api/detect_season_intros?stamp=" + new Date().getTime();
-        url = ApiClient.getUrl(url);
+    function SendJobData(view, file_content, job_type, item_id) {
 
         var query_data = {
             IntroInfo: file_content,
-            SeasonId: season_id
+            ItemId: item_id,
+            JobType: job_type
         };
 
-        await ApiClient.sendPostQuery(url, query_data).then(function (result) {
-            console.log("Query Results : " + JSON.stringify(result));
+        var url = "chapter_api/add_detection_job?stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
 
+        ApiClient.sendPostQuery(url, query_data).then(function (result) {
+            console.log("Job creation results : " + JSON.stringify(result));
+            RefreshJobs(view);
         });
-        */
-
-        console.log("SendRunData Done!");
+        
     }
 
     function RunDetection(view) {
 
+        var series_list = view.querySelector("#series_list");
         var season_list = view.querySelector("#season_list");
-        if (season_list.selectedIndex === -1) {
-            console.log("No season selected");
+        var episode_list = view.querySelector("#episode_list");
+
+        var series_id = series_list.options[series_list.selectedIndex].value;
+        var season_id = season_list.options[season_list.selectedIndex].value;
+        var episode_id = episode_list.options[episode_list.selectedIndex].value;
+
+        console.log("series_id  : " + series_id);
+        console.log("season_id  : " + season_id);
+        console.log("episode_id : " + episode_id);
+
+        var job_type = "";
+        var item_id = "-1";
+
+        if (series_id === "-1" && season_id === "-1" && episode_id === "-1") {
+            alert("No items selected");
             return;
         }
-        var season_id = season_list.options[season_list.selectedIndex].value;
-        console.log("Season Id : " + season_id);
+        else if (series_id !== "-1" && season_id === "-1" && episode_id === "-1") {
+            job_type = "series";
+            item_id = series_id
+        }
+        else if (series_id !== "-1" && season_id !== "-1" && episode_id === "-1") {
+            job_type = "season";
+            item_id = season_id;
+        }
+        else if (series_id !== "-1" && season_id !== "-1" && episode_id !== "-1") {
+            job_type = "episode";
+            item_id = episode_id;
+        }
+
+        console.log("Job Type : " + job_type);
+        console.log("Item Id  : " + item_id);
 
         const theme_info_file = view.querySelector("#theme_info_file");
         if (theme_info_file.files.length === 0) {
-            console.log("No file selected");
+            alert("No file selected");
             return;
         }
 
@@ -176,7 +128,8 @@ define(['mainTabsManager', 'dialogHelper'], function (
         reader.readAsText(selected_file, "UTF-8");
 
         reader.onload = (evt) => {
-            SendRunData(view, evt.target.result, season_id);
+            console.log("SendJobData");
+            SendJobData(view, evt.target.result, job_type, item_id);
         };
 
         reader.onerror = (evt) => {
@@ -185,6 +138,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
     }
 
     function PopulateSeriesNames(view) {
+        console.log("PopulateSeriesNames");
 
         var url = "chapter_api/get_series_list?stamp=" + new Date().getTime();
         url = ApiClient.getUrl(url);
@@ -204,28 +158,241 @@ define(['mainTabsManager', 'dialogHelper'], function (
     function PopulateSeasons(view) {
         console.log("PopulateSeasons");
 
+        var series_list = view.querySelector("#series_list");
         var season_list = view.querySelector("#season_list");
 
-        var series_list = view.querySelector("#series_list");
         var selected_series_id = series_list.options[series_list.selectedIndex].value;
         if (selected_series_id === "-1") {
-            season_list.innerHTML = "";
+            season_list.innerHTML = "<option value='-1'>All Season</option>";
             return;
         }
 
         var url = "chapter_api/get_season_list";
         url += "?id=" + selected_series_id;
-        url += "&stamp = " + new Date().getTime();
+        url += "&stamp=" + new Date().getTime();
         url = ApiClient.getUrl(url);
 
         ApiClient.getApiData(url).then(function (season_list_data) {
             console.log("Season List Data: " + JSON.stringify(season_list_data));
 
-            var options_html = "";
+            var options_html = "<option value='-1'>All Season</option>";
             for (const season of season_list_data) {
                 options_html += "<option value='" + season.Id + "'>" + season.Name + "</option>";
             }
             season_list.innerHTML = options_html;
+        });
+
+    }
+
+    function PopulateEpisodes(view) {
+        console.log("PopulateEpisodes");
+
+        //var series_list = view.querySelector("#series_list");
+        var season_list = view.querySelector("#season_list");
+        var episode_list = view.querySelector("#episode_list");
+
+        var selected_season_id = season_list.options[season_list.selectedIndex].value;
+
+        if (selected_season_id === "-1") {
+            episode_list.innerHTML = "<option value='-1'>All Episodes</option>";
+            return;
+        }
+
+        var episode_url = "chapter_api/get_episode_list";
+        episode_url += "?id=" + selected_season_id;
+        episode_url += "&stamp=" + new Date().getTime();
+        episode_url = ApiClient.getUrl(episode_url);
+
+        ApiClient.getApiData(episode_url).then(async function (episode_list_data) {
+            console.log("Episode List Data: " + JSON.stringify(episode_list_data));
+
+            var options_html = "<option value='-1'>All Episodes</option>";
+            for (const episode of episode_list_data) {
+                options_html += "<option value='" + episode.Id + "'>" + episode.Name + "</option>";
+            }
+            episode_list.innerHTML = options_html;
+        });
+
+    }
+
+    function PopulateJobInfo(view, job_id) {
+        console.log("Populate Job Info : " + job_id);
+
+        var url = "chapter_api/get_job_info";
+        url += "?id=" + job_id;
+        url += "&stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
+
+        ApiClient.getApiData(url).then(function (job_info_data) {
+            console.log("Job Info Data : " + JSON.stringify(job_info_data));
+
+            // populate the job info
+            const job_info_summary = view.querySelector("#job_info");
+            var job_info_html = "<table>";
+            job_info_html += "<tr><td>Id</td><td>" + job_info_data.Id + "</td></tr>";
+            job_info_html += "<tr><td>Name</td><td>" + job_info_data.Name + "</td></tr>";
+            job_info_html += "<tr><td>Added</td><td>" + job_info_data.Added + "</td></tr>";
+            job_info_html += "<tr><td>Items</td><td>" + job_info_data.ItemCount + "</td></tr>";
+            job_info_html += "<tr><td>Status</td><td>" + job_info_data.Status + "</td></tr>";
+            job_info_html += "</table>";
+
+            job_info_summary.innerHTML = job_info_html;
+
+            // populate the job item list
+            const job_item_list = view.querySelector("#job_item_list");
+
+            while (job_item_list.firstChild) {
+                job_item_list.removeChild(job_item_list.firstChild);
+            }
+
+            for (const job_item of job_info_data.Items) {
+                var tr = document.createElement("tr");
+
+                var td = document.createElement("td");
+                td.appendChild(document.createTextNode(job_item.Name));
+                td.style.overflow = "hidden";
+                td.style.whiteSpace = "nowrap";
+                tr.appendChild(td);
+
+                td = document.createElement("td");
+                td.appendChild(document.createTextNode(job_item.StartTime));
+                td.style.overflow = "hidden";
+                td.style.whiteSpace = "nowrap";
+                tr.appendChild(td);
+
+                td = document.createElement("td");
+                td.appendChild(document.createTextNode(job_item.EndTime));
+                td.style.overflow = "hidden";
+                td.style.whiteSpace = "nowrap";
+                tr.appendChild(td);
+
+                //td = document.createElement("td");
+                //td.appendChild(document.createTextNode(job_item.Duration));
+                //td.style.overflow = "hidden";
+                //td.style.whiteSpace = "nowrap";
+                //tr.appendChild(td);
+
+                td = document.createElement("td");
+                td.appendChild(document.createTextNode(job_item.Time));
+                td.style.overflow = "hidden";
+                td.style.whiteSpace = "nowrap";
+                tr.appendChild(td);
+
+                td = document.createElement("td");
+                td.appendChild(document.createTextNode(job_item.Found));
+                td.style.overflow = "hidden";
+                td.style.whiteSpace = "nowrap";
+                tr.appendChild(td);
+                
+                td = document.createElement("td");
+                td.appendChild(document.createTextNode(job_item.Status));
+                td.style.overflow = "hidden";
+                td.style.whiteSpace = "nowrap";
+                tr.appendChild(td);
+
+                job_item_list.appendChild(tr);
+            }
+
+        });
+    }
+
+    function CancelJob(view, job_id) {
+        console.log("CancelJob : " + job_id);
+
+        var url = "chapter_api/cancel_job";
+        url += "?id=" + job_id;
+        url += "&stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
+
+        ApiClient.getApiData(url).then(function (cancel_action_result) {
+            console.log("Cancel Job Result : " + JSON.stringify(cancel_action_result));
+            RefreshJobs(view);
+        });
+    }
+
+    function RemoveJob(view, job_id) {
+        console.log("RemoveJob : " + job_id);
+
+        var url = "chapter_api/remove_job";
+        url += "?id=" + job_id;
+        url += "&stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
+
+        ApiClient.getApiData(url).then(function (remove_action_result) {
+            console.log("Remove Job Result : " + JSON.stringify(remove_action_result));
+            RefreshJobs(view);
+        });
+    }
+
+    function RefreshJobs(view) {
+
+        const job_info_summary = view.querySelector("#job_info");
+        job_info_summary.innerHTML = "";
+        const job_item_list = view.querySelector("#job_item_list");
+        while (job_item_list.firstChild) {
+            job_item_list.removeChild(job_item_list.firstChild);
+        }
+
+        const job_list = view.querySelector("#job_list");
+
+        // clear table
+        while (job_list.firstChild) {
+            job_list.removeChild(job_list.firstChild);
+        }
+
+        var url = "chapter_api/get_job_list?stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
+
+        ApiClient.getApiData(url).then(function (job_list_data) {
+            console.log("Job List Data: " + JSON.stringify(job_list_data));
+
+            for (const job_info of job_list_data) {
+                var tr = document.createElement("tr");
+                var td = null;
+
+                if (job_info.Status === "Running") {
+                    td = document.createElement("td");
+                    td.appendChild(document.createTextNode("!"));
+                    td.style.width = "35px";
+                    td.style.overflow = "hidden";
+                    td.style.whiteSpace = "nowrap";
+                    td.style.cursor = "pointer";
+                    td.addEventListener("click", function () {
+                        CancelJob(view, job_info.Id);
+                    });
+                    tr.appendChild(td);
+                }
+                else {
+                    td = document.createElement("td");
+                    td.appendChild(document.createTextNode("X"));
+                    td.style.width = "30px";
+                    td.style.overflow = "hidden";
+                    td.style.whiteSpace = "nowrap";
+                    td.style.cursor = "pointer";
+                    td.addEventListener("click", function () {
+                        RemoveJob(view, job_info.Id);
+                    });
+                    tr.appendChild(td);
+                }
+
+                td = document.createElement("td");
+                td.appendChild(document.createTextNode(job_info.Name + " (" + job_info.Count + ")"));
+                td.style.overflow = "hidden";
+                td.style.whiteSpace = "nowrap";
+                td.style.cursor = "pointer";
+                td.addEventListener("click", function () {
+                    PopulateJobInfo(view, job_info.Id);
+                });
+                tr.appendChild(td);
+
+                td = document.createElement("td");
+                td.appendChild(document.createTextNode(job_info.Status));
+                td.style.width = "75px";
+                tr.appendChild(td);
+
+
+                job_list.appendChild(tr);
+            }
         });
 
     }
@@ -238,13 +405,23 @@ define(['mainTabsManager', 'dialogHelper'], function (
             mainTabsManager.setTabs(this, 2, getTabList);
 
             var series_list = view.querySelector("#series_list");
-            series_list.addEventListener("change", function () { PopulateSeasons(view); });
+            series_list.addEventListener("change", function () {
+                PopulateSeasons(view);
+                PopulateEpisodes(view);
+            });
 
+            var season_list = view.querySelector("#season_list");
+            season_list.addEventListener("change", function () { PopulateEpisodes(view); });
+            
             PopulateSeriesNames(view);
 
             const run_detection = view.querySelector("#run_detection");
             run_detection.addEventListener("click", function () { RunDetection(view); });
-            
+
+            const refresh_jobs = view.querySelector("#refresh_jobs");
+            refresh_jobs.addEventListener("click", function () { RefreshJobs(view); });
+
+            RefreshJobs(view);
         });
 
         view.addEventListener('viewhide', function (e) {

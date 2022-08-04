@@ -7,30 +7,54 @@
 
             <table>
                 <tr>
-                    <td>Series</td>
-                    <td><select id="series_list"></select></td>
+                    <td>Items</td>
+                    <td>
+                        <select id="series_list"></select>
+                        <select id="season_list">
+                            <option value='-1'>All Season</option>
+                        </select>
+                        <select id="episode_list">
+                            <option value='-1'>All Episodes</option>
+                        </select>
+                    </td>
                 </tr>
                 <tr>
-                    <td>Season</td>
-                    <td><select id="season_list"></select></td>
-                </tr>
-                <tr>
-                    <td>Chromaprint file</td>
+                    <td>Into Info</td>
                     <td><input type="file" id="theme_info_file" /></td>
                 </tr>
                 <tr>
                     <td></td>
-                    <td><button id="run_detection">Run</button></td>
+                    <td><button id="run_detection">Add Job</button></td>
                 </tr>
             </table>
 
-            <br />
-            <div id="detection_status"></div>
-            <br />
+            <hr />
+            <button id="refresh_jobs">Refresh</button>
 
-            <table id="detection_results_table" style="width:90%;">
+            <table style="width:100%;">
+                <tr>
+
+                    <td style="width:25%;" valign="top">
+                        <div id="table-wrapper" style="position: relative; border: 1px solid;">
+                            <div id="table-scroll" style="height: 400px; width: 100%; overflow: auto;">
+                                <table id="job_list" style="table-layout: fixed; width:100%;"> </table>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td style="width:75%; padding-left:20px;" valign="top">
+
+                        <div id="job_info">
+                        </div>
+                        <br />
+                        <table style="table-layout: fixed; width: 100%;">
+                            <tbody id="job_item_list">
+                            </tbody>
+                        </table>
+
+                    </td>
+                </tr>
             </table>
-
 
         </div>
     </div>
