@@ -264,11 +264,11 @@ namespace ChapterApi
 
                 List<Dictionary<string, object>> job_items = new List<Dictionary<string, object>>();
 
-                foreach(DetectionJobItem job_item in job.items)
+                foreach (DetectionJobItem job_item in job.items)
                 {
                     Dictionary<string, object> job_item_info = new Dictionary<string, object>();
 
-                    job_item_info.Add("Name", job_item.item.Name);
+                    job_item_info.Add("Name", job_item.name);
                     job_item_info.Add("Status", job_item.status);
                     job_item_info.Add("Found", job_item.found_intro);
                     job_item_info.Add("StartTime", job_item.start_time);
@@ -278,6 +278,14 @@ namespace ChapterApi
 
                     job_items.Add(job_item_info);
                 }
+
+                job_items.Sort(delegate (Dictionary<string, object> c1, Dictionary<string, object> c2)
+                {
+                    string c1_str = c1["Name"] as string;
+                    string c2_str = c2["Name"] as string;
+                    int cmp_restlt = string.Compare(c1_str, c2_str, comparisonType: StringComparison.OrdinalIgnoreCase);
+                    return cmp_restlt;
+                });
 
                 job_info.Add("Items", job_items);
             }
@@ -381,6 +389,12 @@ namespace ChapterApi
                 {
                     DetectionJobItem job_item = new DetectionJobItem();
                     job_item.item = episode;
+
+                    string s_no = (episode.ParentIndexNumber ?? 0).ToString("D2");
+                    string e_no = (episode.IndexNumber ?? 0).ToString("D2");
+                    string item_name = "s" + s_no + "e" + e_no + " - " + episode.Name;
+                    job_item.name = item_name;
+
                     job.items.Add(job_item);
                 }
 
@@ -392,6 +406,12 @@ namespace ChapterApi
 
                 DetectionJobItem job_item = new DetectionJobItem();
                 job_item.item = episode;
+
+                string s_no = (episode.ParentIndexNumber ?? 0).ToString("D2");
+                string e_no = (episode.IndexNumber ?? 0).ToString("D2");
+                string item_name = "s" + s_no + "e" + e_no + " - " + episode.Name;
+                job_item.name = item_name;
+
                 job.items.Add(job_item);
             }
 

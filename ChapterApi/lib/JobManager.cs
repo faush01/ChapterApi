@@ -55,6 +55,7 @@ namespace ChapterApi
     public class DetectionJobItem
     {
         public BaseItem item { get; set; }
+        public string name { set; get; }
         public JobItemStatus status { get; set; } = JobItemStatus.Waiting;
         public int cp_data_len { get; set; }
         public string detection_duration { set; get; }
