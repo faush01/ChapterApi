@@ -75,9 +75,26 @@ define(['mainTabsManager', 'dialogHelper'], function (
         return url;
     }
 
+    function pad2(pad, num) {
+        return num.toString().padStart(pad, '0');
+    }
+
     function GetTimeString(time) {
-        const result = new Date(time * 1000).toISOString().slice(11, 19);
-        return result;
+
+        let milliseconds = Math.floor(time * 1000);
+        let seconds = Math.floor(milliseconds / 1000);
+        let minutes = Math.floor(seconds / 60);
+        let hours = Math.floor(minutes / 60);
+
+        milliseconds = milliseconds % 1000;
+        seconds = seconds % 60;
+        minutes = minutes % 60;
+        //hours = hours % 24;
+
+        return pad2(2, hours) + ":" + pad2(2, minutes) + ":" + pad2(2, seconds) + "." + pad2(3, milliseconds);
+
+        //const result = new Date(time * 1000).toISOString().slice(11, 19) + " - " + time;
+        //return result;
     }
 
     function PlayChapter(view, item_info, chapter_info) {
@@ -105,16 +122,20 @@ define(['mainTabsManager', 'dialogHelper'], function (
         html += '<h3 class="formDialogHeaderTitle">Chapter : ' + chapter_info.Name + ' (' + chapter_info.StartTime + ')</h3>';
         html += '</div>';
 
-        html += '<div class="formDialogContent" style="margin:2em">';
+        html += '<div class="formDialogContent" style="margin:2em;">';
         html += '<div class="dialogContentInner" style="max-width: 100%; justify-content: center;">';
 
         var video_url = GetVideoUrl(item_info.Id, start_time_offset);
         console.log("Chapter Play URL : " + video_url);
 
-        html += '<video style="width:100%; height:100%" autoplay controls ';
+        html += '<table style="width:100%;"><tr><td style="text-align: center;">';
+
+        html += '<video style="width:80%; height:80%" autoplay controls ';
         html += 'webkit-playsinline="" playsinline="" crossorigin="anonymous" ';
         html += 'src = "' + video_url + '">';
         html += '</video>';
+
+        html += '</td></tr></table>';
 
         html += '<br /><div id="progression" style="font-weight: bold;"></div>';
 
