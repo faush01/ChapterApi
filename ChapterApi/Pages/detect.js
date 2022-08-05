@@ -40,7 +40,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
     }
 
     ApiClient.getApiData = function (url_to_get) {
-        console.log("getUserActivity Url = " + url_to_get);
+        console.log("getApiData Url = " + url_to_get);
         return this.ajax({
             type: "GET",
             url: url_to_get,
