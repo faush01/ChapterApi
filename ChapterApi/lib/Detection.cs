@@ -51,7 +51,7 @@ namespace ChapterApi
             job_item.cp_data_len = episode_cp_data.Length;
 
             FindBestOffset(episode_cp_data, duration, theme_cp_byte_data, job_item);
-
+            
             stopWatch.Stop();
             TimeSpan ts = stopWatch.Elapsed;
             job_item.detection_duration = ts.TotalSeconds.ToString("#.000");

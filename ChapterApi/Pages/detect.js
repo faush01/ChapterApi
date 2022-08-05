@@ -232,7 +232,22 @@ define(['mainTabsManager', 'dialogHelper'], function (
                 tr_item.style.backgroundColor = "";
             }
         }
+    }
 
+    function InsertChapters(view, job_id) {
+        console.log("InsertChapters : " + job_id);
+
+        //alert("Inserting Chapters : " + job_id);
+        
+        var url = "chapter_api/insert_chapters";
+        url += "?id=" + job_id;
+        url += "&stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
+
+        ApiClient.getApiData(url).then(function (cancel_action_result) {
+            console.log("Insert Chapter Result : " + JSON.stringify(cancel_action_result));
+            alert("Intro Chapters Inserted");
+        });
     }
 
     function PopulateJobInfo(view, job_id) {
@@ -260,8 +275,20 @@ define(['mainTabsManager', 'dialogHelper'], function (
             job_info_html += "<tr><td>Items</td><td>: " + job_info_data.ItemCount + "</td></tr>";
             job_info_html += "<tr><td>Status</td><td>: " + job_info_data.Status + "</td></tr>";
             job_info_html += "</table>";
-
             job_info_summary.innerHTML = job_info_html;
+
+            const add_chapters_form = view.querySelector("#add_chapters_form");
+            while (add_chapters_form.firstChild) {
+                add_chapters_form.removeChild(add_chapters_form.firstChild);
+            }
+            if (job_info_data.Status === "Complete") {
+                var button = document.createElement("button");
+                button.appendChild(document.createTextNode("Insert Chapters"));
+                button.addEventListener("click", function () {
+                    InsertChapters(view, job_info_data.Id);
+                });
+                add_chapters_form.appendChild(button);
+            }
 
             // populate the job item list
             const job_item_list = view.querySelector("#job_item_list");

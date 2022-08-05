@@ -96,6 +96,13 @@ namespace ChapterApi
         public string id { get; set; }
     }
 
+    [Route("/chapter_api/insert_chapters", "GET", Summary = "Insert detected chapters")]
+    //[Authenticated]
+    public class InsertChapters : IReturn<Object>
+    {
+        public string id { get; set; }
+    }
+
     public class DetectApiEndpoint : IService, IRequiresRequest
     {
         private readonly ISessionManager _sessionManager;
@@ -145,6 +152,78 @@ namespace ChapterApi
         }
 
         public IRequest Request { get; set; }
+
+        private void InsertChapters(DetectionJobItem job_item)
+        {
+            // get chapters
+            List<ChapterInfo> chapters = _ir.GetChapters(job_item.item);
+
+            List<ChapterInfo> new_chapters = new List<ChapterInfo>();
+            // first remove the existing Intro chapters
+            foreach (ChapterInfo ci in chapters)
+            {
+                if(ci.MarkerType != MarkerType.IntroStart && ci.MarkerType != MarkerType.IntroEnd)
+                {
+                    new_chapters.Add(ci);
+                }
+            }
+
+            // add new chapters
+            ChapterInfo intro_start = new ChapterInfo();
+            intro_start.MarkerType = MarkerType.IntroStart;
+            intro_start.Name = "IntroStart";
+            intro_start.StartPositionTicks = job_item.start_time_ticks;
+            new_chapters.Add(intro_start);
+
+            ChapterInfo intro_end = new ChapterInfo();
+            intro_end.MarkerType = MarkerType.IntroEnd;
+            intro_end.Name = "IntroEnd";
+            intro_end.StartPositionTicks = job_item.end_time_ticks;
+            new_chapters.Add(intro_end);
+
+            // sort chapters
+            new_chapters.Sort(delegate (ChapterInfo c1, ChapterInfo c2)
+            {
+                return c1.StartPositionTicks.CompareTo(c2.StartPositionTicks);
+            });
+
+            _ir.SaveChapters(job_item.item.InternalId, new_chapters);
+        }
+
+        public object Get(InsertChapters request)
+        {
+            Dictionary<string, object> add_result = new Dictionary<string, object>();
+            add_result.Add("JobId", request.id);
+            Dictionary<string, DetectionJob> jobs = _jm.GetJobList();
+
+            if (!jobs.ContainsKey(request.id))
+            {
+                add_result.Add("Result", "Job Id not found : " + request.id);
+                return add_result;
+            }
+
+            DetectionJob job = jobs[request.id];
+
+            if (job.status != JobStatus.Complete)
+            {
+                add_result.Add("Result", "Job not complete : " + request.id);
+                return add_result;
+            }
+
+            int count = 0;
+            foreach(DetectionJobItem job_item in job.items)
+            {
+                if(job_item.found_intro)
+                {
+                    InsertChapters(job_item);
+                    count++;
+                }
+            }
+
+            add_result.Add("Result", "Inserted chapters : " + count);
+
+            return add_result;
+        }
 
         public object Get(GetEpisodeList request)
         {
