@@ -33,6 +33,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -227,7 +228,10 @@ namespace ChapterApi
 
             Dictionary<string, DetectionJob> jobs = _jm.GetJobList();
 
-            foreach(string job_id in jobs.Keys)
+            List<string> keys = jobs.Keys.ToList();
+            keys.Sort();
+
+            foreach (string job_id in keys)
             {
                 DetectionJob job = jobs[job_id];
                 Dictionary<string, object> job_info = new Dictionary<string, object>();
