@@ -226,7 +226,10 @@ namespace ChapterApi
             double duration = Math.Round((intro_end_time - intro_start_time).TotalSeconds, 3);
             theme_data.Add("duration", duration);
 
-            int intro_extract_span = (int)((intro_end_time.TotalSeconds * 1.33) + 0.5);
+            int intro_extract_span = (int)((intro_end_time.TotalSeconds * 1.5) + 0.5);
+            intro_extract_span = (intro_extract_span / 60) / 5;
+            intro_extract_span = intro_extract_span + 1;
+            intro_extract_span = intro_extract_span * 5;
             theme_data.Add("extract", intro_extract_span);
 
             int result = ExtractChromaprint(theme_data, intro_start_time, intro_end_time, item.Path);
@@ -341,6 +344,7 @@ namespace ChapterApi
             string cp_data = Convert.ToBase64String(chroma_bytes);
 
             theme_data.Add("cp_data", cp_data);
+            theme_data.Add("cp_data_length", chroma_bytes.Length);
             theme_data.Add("cp_data_md5", theme_cp_data_md5);
 
             return return_code;

@@ -42,7 +42,7 @@ namespace ChapterApi
 
             //Thread.Sleep(1000);
             
-            TimeSpan duration = TimeSpan.FromSeconds(extract);
+            TimeSpan duration = TimeSpan.FromMinutes(extract);
 
             _logger.Info("Extracted CP from : " + job_item.item.Name);
             byte[] episode_cp_data = ExtractChromaprint(duration, job_item.item.Path);
