@@ -19,6 +19,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
     'use strict';
 
     var ticks_per_sec = 10000000;
+    var selected_job_id = "";
 
     function getTabList() {
         var tab_list = [
@@ -215,8 +216,32 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
     }
 
+    function SetSelectedJob(view, job_id) {
+
+        const job_item_list = view.querySelector("#job_list");
+
+        for (const tr_item of job_item_list.childNodes) {
+            var td_job_id = tr_item.getAttribute("job_id");
+
+            console.log("job_list : " + td_job_id + " - " + job_id);
+
+            if (td_job_id === job_id) {
+                tr_item.style.backgroundColor = "#77FF7730";
+            }
+            else {
+                tr_item.style.backgroundColor = "";
+            }
+        }
+
+    }
+
     function PopulateJobInfo(view, job_id) {
         console.log("Populate Job Info : " + job_id);
+
+        selected_job_id = job_id;
+
+        // set selected job item
+        SetSelectedJob(view, job_id);
 
         var url = "chapter_api/get_job_info";
         url += "?id=" + job_id;
@@ -292,7 +317,6 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
                 job_item_list.appendChild(tr);
             }
-
         });
     }
 
@@ -346,7 +370,10 @@ define(['mainTabsManager', 'dialogHelper'], function (
         ApiClient.getApiData(url).then(function (job_list_data) {
             console.log("Job List Data: " + JSON.stringify(job_list_data));
 
+            var selected_exists = false;
+
             for (const job_info of job_list_data) {
+
                 var tr = document.createElement("tr");
                 var td = null;
 
@@ -390,8 +417,18 @@ define(['mainTabsManager', 'dialogHelper'], function (
                 td.style.width = "75px";
                 tr.appendChild(td);
 
+                if (job_info.Id == selected_job_id) {
+                    selected_exists = true;
+                    //tr.style.backgroundColor = "#77FF7730";
+                }
+
+                tr.setAttribute("job_id", job_info.Id);
 
                 job_list.appendChild(tr);
+            }
+
+            if (selected_exists) {
+                PopulateJobInfo(view, selected_job_id);
             }
         });
 
