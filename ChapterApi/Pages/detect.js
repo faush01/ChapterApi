@@ -118,7 +118,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
         const theme_info_file = view.querySelector("#theme_info_file");
         if (theme_info_file.files.length === 0) {
-            alert("No file selected");
+            alert("No Intro Info file selected");
             return;
         }
 
@@ -130,11 +130,35 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
         reader.onload = (evt) => {
             console.log("SendJobData");
-            SendJobData(view, evt.target.result, job_type, item_id);
+            const job_data_string = evt.target.result;
+            try {
+                const job_data = JSON.parse(job_data_string);
+
+                let message = "\n";
+                message += "Series : " + job_data.series + "\n";
+                message += "Duration : " + job_data.duration + " sec\n";
+                message += "Extract : " + job_data.extract + " minutes\n";
+                message += "tvdb : " + job_data.tvdb + "\n";
+                message += "imdb : " + job_data.imdb + "\n";
+                message += "tmdb : " + job_data.tmdb + "\n";
+                message += "Data Length : " + job_data.cp_data_length + "\n";
+                message += "Data MD5 : " + job_data.cp_data_md5 + "\n";
+
+                if (!confirm("Job Data : \n" + message)) {
+                    return;
+                }
+            }
+            catch (e) {
+                alert("Error parsing Intro Info file :\n" + e);
+                return;
+            }
+
+            SendJobData(view, job_data_string, job_type, item_id);
         };
 
         reader.onerror = (evt) => {
             console.log("Error loading file");
+            alert("Error loading Intro Info file");
         };
     }
 
