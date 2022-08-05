@@ -367,10 +367,10 @@ namespace ChapterApi
             job.intro_info = intro_cp_info;
             job.intro_cp_data = cp_byte_data;
 
-            if(request.JobType == "series" || request.JobType == "season")
-            {
-                job.name = intro_cp_info.series;
+            job.name = intro_cp_info.series + " (" + request.JobType + ")";
 
+            if (request.JobType == "series" || request.JobType == "season")
+            {
                 // get item list
                 InternalItemsQuery query = new InternalItemsQuery();
                 query.Recursive = true;
@@ -387,8 +387,6 @@ namespace ChapterApi
             }
             else if(request.JobType == "episode")
             {
-                job.name = intro_cp_info.series;
-
                 Guid item_guid = _libraryManager.GetGuid(request.ItemId);
                 BaseItem episode = _libraryManager.GetItemById(item_guid);
 

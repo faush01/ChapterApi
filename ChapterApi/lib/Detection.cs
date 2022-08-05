@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace ChapterApi
 {
@@ -39,6 +40,8 @@ namespace ChapterApi
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
+            //Thread.Sleep(1000);
+            
             TimeSpan duration = TimeSpan.FromSeconds(extract);
 
             _logger.Info("Extracted CP from : " + job_item.item.Name);
@@ -51,7 +54,7 @@ namespace ChapterApi
 
             stopWatch.Stop();
             TimeSpan ts = stopWatch.Elapsed;
-            job_item.detection_duration = ts.ToString(@"hh\:mm\:ss\.fff");
+            job_item.detection_duration = ts.TotalSeconds.ToString("#.000");
         }
 
         private byte[] ExtractChromaprint(

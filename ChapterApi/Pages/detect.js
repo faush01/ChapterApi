@@ -254,11 +254,11 @@ define(['mainTabsManager', 'dialogHelper'], function (
             // populate the job info
             const job_info_summary = view.querySelector("#job_info");
             var job_info_html = "<table>";
-            job_info_html += "<tr><td>Id</td><td>" + job_info_data.Id + "</td></tr>";
-            job_info_html += "<tr><td>Name</td><td>" + job_info_data.Name + "</td></tr>";
-            job_info_html += "<tr><td>Added</td><td>" + job_info_data.Added + "</td></tr>";
-            job_info_html += "<tr><td>Items</td><td>" + job_info_data.ItemCount + "</td></tr>";
-            job_info_html += "<tr><td>Status</td><td>" + job_info_data.Status + "</td></tr>";
+            job_info_html += "<tr><td>Job Id</td><td>: " + job_info_data.Id + "</td></tr>";
+            job_info_html += "<tr><td>Name</td><td>: " + job_info_data.Name + "</td></tr>";
+            job_info_html += "<tr><td>Added</td><td>: " + job_info_data.Added + "</td></tr>";
+            job_info_html += "<tr><td>Items</td><td>: " + job_info_data.ItemCount + "</td></tr>";
+            job_info_html += "<tr><td>Status</td><td>: " + job_info_data.Status + "</td></tr>";
             job_info_html += "</table>";
 
             job_info_summary.innerHTML = job_info_html;
@@ -270,6 +270,8 @@ define(['mainTabsManager', 'dialogHelper'], function (
                 job_item_list.removeChild(job_item_list.firstChild);
             }
 
+            var row_count = 0;
+
             for (const job_item of job_info_data.Items) {
                 var tr = document.createElement("tr");
 
@@ -280,13 +282,23 @@ define(['mainTabsManager', 'dialogHelper'], function (
                 tr.appendChild(td);
 
                 td = document.createElement("td");
-                td.appendChild(document.createTextNode(job_item.StartTime));
+                if (job_item.StartTime) {
+                    td.appendChild(document.createTextNode(job_item.StartTime));
+                }
+                else {
+                    td.appendChild(document.createTextNode(""));
+                }
                 td.style.overflow = "hidden";
                 td.style.whiteSpace = "nowrap";
                 tr.appendChild(td);
 
                 td = document.createElement("td");
-                td.appendChild(document.createTextNode(job_item.EndTime));
+                if (job_item.EndTime) {
+                    td.appendChild(document.createTextNode(job_item.EndTime));
+                }
+                else {
+                    td.appendChild(document.createTextNode(""));
+                }
                 td.style.overflow = "hidden";
                 td.style.whiteSpace = "nowrap";
                 tr.appendChild(td);
@@ -298,22 +310,60 @@ define(['mainTabsManager', 'dialogHelper'], function (
                 //tr.appendChild(td);
 
                 td = document.createElement("td");
-                td.appendChild(document.createTextNode(job_item.Time));
+                td.style.textAlign = "right";
+                if (job_item.Time) {
+                    td.appendChild(document.createTextNode(job_item.Time));
+                }
+                else {
+                    td.appendChild(document.createTextNode(""));
+                }
                 td.style.overflow = "hidden";
                 td.style.whiteSpace = "nowrap";
                 tr.appendChild(td);
 
+                /*
                 td = document.createElement("td");
                 td.appendChild(document.createTextNode(job_item.Found));
                 td.style.overflow = "hidden";
                 td.style.whiteSpace = "nowrap";
                 tr.appendChild(td);
-                
+
                 td = document.createElement("td");
                 td.appendChild(document.createTextNode(job_item.Status));
                 td.style.overflow = "hidden";
                 td.style.whiteSpace = "nowrap";
                 tr.appendChild(td);
+                */
+
+                td = document.createElement("td");
+                td.style.textAlign = "center";
+                if (job_item.Status !== "Waiting") {
+                    var i = document.createElement("i");
+                    i.className = "md-icon";
+                    //i.style.fontSize = "20px";
+                    if (job_item.Found) {
+                        i.title = "True";
+                        i.appendChild(document.createTextNode("check"));
+                    }
+                    else {
+                        i.title = "False";
+                        i.appendChild(document.createTextNode("clear"));
+                    }
+                    td.appendChild(i);
+                }
+                else {
+                    td.appendChild(document.createTextNode(""));
+                }
+                tr.appendChild(td);
+
+
+                if (row_count % 2 === 0) {
+                    tr.style.backgroundColor = "#77FF7730";
+                }
+                else {
+                    tr.style.backgroundColor = "#7777FF30";
+                }
+                row_count++;
 
                 job_item_list.appendChild(tr);
             }
@@ -377,30 +427,31 @@ define(['mainTabsManager', 'dialogHelper'], function (
                 var tr = document.createElement("tr");
                 var td = null;
 
+                td = document.createElement("td");
+                td.style.textAlign = "center";
+                td.style.width = "35px";
+                td.style.overflow = "hidden";
+                td.style.whiteSpace = "nowrap";
+                var i = document.createElement("i");
+                i.style.cursor = "pointer";
+                i.className = "md-icon";
+                i.style.fontSize = "22px";
                 if (job_info.Status === "Running") {
-                    td = document.createElement("td");
-                    td.appendChild(document.createTextNode("!"));
-                    td.style.width = "35px";
-                    td.style.overflow = "hidden";
-                    td.style.whiteSpace = "nowrap";
-                    td.style.cursor = "pointer";
-                    td.addEventListener("click", function () {
+                    i.title = "Cancel";
+                    i.appendChild(document.createTextNode("sync"));
+                    i.addEventListener("click", function () {
                         CancelJob(view, job_info.Id);
                     });
-                    tr.appendChild(td);
                 }
                 else {
-                    td = document.createElement("td");
-                    td.appendChild(document.createTextNode("X"));
-                    td.style.width = "30px";
-                    td.style.overflow = "hidden";
-                    td.style.whiteSpace = "nowrap";
-                    td.style.cursor = "pointer";
-                    td.addEventListener("click", function () {
+                    i.title = "Delete";
+                    i.appendChild(document.createTextNode("delete_forever"));
+                    i.addEventListener("click", function () {
                         RemoveJob(view, job_info.Id);
                     });
-                    tr.appendChild(td);
                 }
+                td.appendChild(i);
+                tr.appendChild(td);
 
                 td = document.createElement("td");
                 td.appendChild(document.createTextNode(job_info.Name + " (" + job_info.Count + ")"));
