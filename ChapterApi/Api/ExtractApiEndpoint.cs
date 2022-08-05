@@ -46,6 +46,8 @@ namespace ChapterApi
     {
         [ApiMember(Name = "id", Description = "item id", IsRequired = true, DataType = "int", ParameterType = "query", Verb = "GET")]
         public int id { get; set; }
+        [ApiMember(Name = "type", Description = "extraction type", IsRequired = true, DataType = "int", ParameterType = "query", Verb = "GET")]
+        public int type { get; set; }
     }
 
     public class ExtractApiEndpoint : IService, IRequiresRequest
@@ -125,19 +127,14 @@ namespace ChapterApi
             return sb.ToString();
         }
 
-        private object GetResponceFile(string filename, string data)
+        private object GetResponceObject(string filename, string content_type, byte[] audio_data)
         {
-            byte[] json_bytes = Encoding.UTF8.GetBytes(data);
-            MemoryStream ms = new MemoryStream(json_bytes);
-
-            //MemoryStream ms = new MemoryStream();
-            //_jsonSerializer.SerializeToStream(theme_data, ms);
-            //ms.Position = 0;
+            MemoryStream ms = new MemoryStream(audio_data);
 
             var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             headers["Content-Disposition"] = "attachment; filename=\"" + filename + "\"";
 
-            return _hrf.GetResult(Request, ms, "text/html; charset=UTF-8", headers);
+            return _hrf.GetResult(Request, ms, content_type, headers);
         }
 
         public object Get(ExtractTheme request)
@@ -151,7 +148,7 @@ namespace ChapterApi
             if(item == null)
             {
                 string message = "Item id not valid (" + request.id + ")";
-                responce = GetResponceFile("error.txt", message);
+                responce = GetResponceObject("error.txt", "text/html; charset=UTF-8", Encoding.UTF8.GetBytes(message));
                 return responce;
             }
 
@@ -160,7 +157,7 @@ namespace ChapterApi
             if(episode == null)
             {
                 string message = "Item id not valid episode (" + request.id + ")";
-                responce = GetResponceFile("error.txt", message);
+                responce = GetResponceObject("error.txt", "text/html; charset=UTF-8", Encoding.UTF8.GetBytes(message));
                 return responce;
             }
 
@@ -184,7 +181,7 @@ namespace ChapterApi
             if(provider_found == false)
             {
                 string message = "Series has no provider IDs (" + request.id + ")";
-                responce = GetResponceFile("error.txt", message);
+                responce = GetResponceObject("error.txt", "text/html; charset=UTF-8", Encoding.UTF8.GetBytes(message));
                 return responce;
             }
 
@@ -208,7 +205,7 @@ namespace ChapterApi
             if(intro_start == null || intro_end == null)
             {
                 string message = "Episode has no IntroStart or IntroEnd chapter markers (" + request.id + ")";
-                responce = GetResponceFile("error.txt", message);
+                responce = GetResponceObject("error.txt", "text/html; charset=UTF-8", Encoding.UTF8.GetBytes(message));
                 return responce;
             }
 
@@ -216,7 +213,7 @@ namespace ChapterApi
             if (intro_duration < 5 || intro_duration > 300)
             {
                 string message = "Episode Intro duration is not valid " + intro_duration + " (" + request.id + ")";
-                responce = GetResponceFile("error.txt", message);
+                responce = GetResponceObject("error.txt", "text/html; charset=UTF-8", Encoding.UTF8.GetBytes(message));
                 return responce;
             }
 
@@ -232,15 +229,6 @@ namespace ChapterApi
             intro_extract_span = intro_extract_span * 5;
             theme_data.Add("extract", intro_extract_span);
 
-            int result = ExtractChromaprint(theme_data, intro_start_time, intro_end_time, item.Path);
-
-            if (result != 0)
-            {
-                string message = "Error extracting chromaprint data " + result + " (" + request.id + ")";
-                responce = GetResponceFile("error.txt", message);
-                return responce;
-            }
-
             // build filename
             string filename = episode.SeriesName;
             filename = filename.ToLower();
@@ -252,11 +240,87 @@ namespace ChapterApi
             filename += "-";
             filename += "s" + (episode.ParentIndexNumber ?? 0).ToString("D2");
             //filename += "e" + (episode.IndexNumber ?? 0).ToString("D2");
-            filename += ".json";
 
-            string json_string = GetJsonString(theme_data);
-            responce = GetResponceFile(filename, json_string);
-            return responce;
+            if (request.type == 2)
+            {
+                // extract audio
+                _logger.Info("Extracting Audio Data");
+                byte[] audio_bytes = ExtractAudio(intro_start_time, intro_end_time, item.Path);
+                responce = GetResponceObject(filename + ".wav", "audio/wav", audio_bytes);
+                return responce;
+            }
+            else
+            {
+                int result = ExtractChromaprint(theme_data, intro_start_time, intro_end_time, item.Path);
+
+                if (result != 0)
+                {
+                    string message = "Error extracting chromaprint data " + result + " (" + request.id + ")";
+                    responce = GetResponceObject("error.txt", "text/html; charset=UTF-8", Encoding.UTF8.GetBytes(message));
+                    return responce;
+                }
+
+                string json_string = GetJsonString(theme_data);
+                byte[] json_bytes = Encoding.UTF8.GetBytes(json_string);
+                responce = GetResponceObject(filename + ".json", "text/html; charset=UTF-8", json_bytes);
+                return responce;
+            }
+        }
+
+        private byte[] ExtractAudio(
+            TimeSpan ts_start,
+            TimeSpan ts_end,
+            string media_path)
+        {
+            TimeSpan ts_duration = ts_end - ts_start;
+            string ffmpeg_path = _ffmpeg.FfmpegConfiguration.EncoderPath;
+
+            List<string> command_params = new List<string>();
+
+            command_params.Add("-accurate_seek");
+            command_params.Add(string.Format("-ss {0}", ts_start));
+            command_params.Add(string.Format("-t {0}", ts_duration));
+            command_params.Add("-i \"" + media_path + "\"");
+            command_params.Add("-ac 1");
+            command_params.Add("-acodec pcm_s16le");
+            command_params.Add("-ar 16000");
+            command_params.Add("-c:v nul");
+            command_params.Add("-f wav");
+            command_params.Add("-");
+
+            string param_string = string.Join(" ", command_params);
+
+            _logger.Info("Extracting chromaprint : " + ffmpeg_path + " " + param_string);
+
+            ProcessStartInfo start_info = new ProcessStartInfo(ffmpeg_path, param_string);
+            start_info.RedirectStandardOutput = true;
+            start_info.RedirectStandardError = false;
+            start_info.UseShellExecute = false;
+            start_info.CreateNoWindow = true;
+
+            byte[] chroma_bytes = new byte[0];
+            int return_code = -1;
+            using (Process process = new Process() { StartInfo = start_info })
+            {
+                process.Start();
+                FileStream baseStream = process.StandardOutput.BaseStream as FileStream;
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    int last_read = 0;
+                    byte[] buffer = new byte[4096];
+                    do
+                    {
+                        last_read = baseStream.Read(buffer, 0, buffer.Length);
+                        ms.Write(buffer, 0, last_read);
+                    } while (last_read > 0);
+
+                    chroma_bytes = ms.ToArray();
+                }
+
+                return_code = process.ExitCode;
+            }
+
+            return chroma_bytes;
         }
 
         private int ExtractChromaprint(

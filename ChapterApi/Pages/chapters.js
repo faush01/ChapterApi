@@ -580,15 +580,15 @@ define(['mainTabsManager', 'dialogHelper'], function (
                     tr.appendChild(td);
 
                     td = document.createElement("td");
+                    td.style.textAlign = "center";
 
                     if (intro_start && intro_end) {
                         var intro_duration = (intro_end.TimeTicks - intro_start.TimeTicks) / ticks_per_sec;
                         if (intro_duration > 10 && intro_duration < 300) {
                             var link = document.createElement("a");
-
                             link.style.color = "inherit";
-
                             var export_link = "chapter_api/extract_theme?id=" + episode.Id;
+                            export_link += "&type=1";
                             export_link += "&stamp=" + new Date().getTime();
                             export_link = ApiClient.getUrl(export_link);
                             link.href = export_link;
@@ -597,10 +597,26 @@ define(['mainTabsManager', 'dialogHelper'], function (
                             i.title = "Extract Intro Chromaprint";
                             i.className = "md-icon";
                             i.style.fontSize = "25px";
-                            //i.style.cursor = "pointer";
                             i.appendChild(document.createTextNode("file_download"));
                             link.appendChild(i);
                             td.appendChild(link);
+
+                            link = document.createElement("a");
+                            link.style.color = "inherit";
+                            export_link = "chapter_api/extract_theme?id=" + episode.Id;
+                            export_link += "&type=2";
+                            export_link += "&stamp=" + new Date().getTime();
+                            export_link = ApiClient.getUrl(export_link);
+                            link.href = export_link;
+
+                            i = document.createElement("i");
+                            i.title = "Extract Intro Audio";
+                            i.className = "md-icon";
+                            i.style.fontSize = "25px";
+                            i.appendChild(document.createTextNode("volume_up"));
+                            link.appendChild(i);
+                            td.appendChild(link);
+
                         }
                     }
 
