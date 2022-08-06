@@ -199,6 +199,14 @@ namespace ChapterApi
         {
             Detection detector = new Detection(_logger, job.ffmpeg_path);
 
+            job.items.Sort(delegate (DetectionJobItem c1, DetectionJobItem c2)
+            {
+                string c1_str = c1.name;
+                string c2_str = c2.name;
+                int cmp_restlt = string.Compare(c1_str, c2_str, comparisonType: StringComparison.OrdinalIgnoreCase);
+                return cmp_restlt;
+            });
+
             foreach (DetectionJobItem item in job.items)
             {
                 //Thread.Sleep(10000);
