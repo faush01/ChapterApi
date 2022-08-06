@@ -47,7 +47,36 @@ define(['mainTabsManager', 'dialogHelper'], function (
         });
     };
 
-    function GetVideoUrl(item_id, startTime) {
+    ApiClient.sendPostQuery = function (url_to_get, query_data) {
+        var post_data = JSON.stringify(query_data);
+        console.log("sendPostQuery url  = " + url_to_get);
+        //console.log("sendPostQuery data = " + post_data);
+        return this.ajax({
+            type: "POST",
+            url: url_to_get,
+            dataType: "json",
+            data: post_data,
+            contentType: 'application/json'
+        });
+    };
+
+    function StopPlayChapter(emby_item_id, play_session_id) {
+        var url = "Sessions/Playing/Stopped";
+        var postdata = {
+            'ItemId': emby_item_id,
+            'PlaySessionId': play_session_id
+        };
+
+        var url = ApiClient.getUrl(url);
+        console.log("Sending Stop Url  : " + url);
+        console.log("Sending Stop Data : " + JSON.stringify(postdata));
+
+        ApiClient.sendPostQuery(url, postdata).then(function (result) {
+            console.log("Stop Session Results : " + result);
+        });
+    }
+
+    function GetVideoUrl(item_id, startTime, playing_session_id) {
         var url = "Videos/" + item_id + "/stream.mp4";
         url += "?StartTimeTicks=" + startTime;
         url += "&VideoCodec=h264";
@@ -67,7 +96,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
         //url += "&h264-profile=high,main,baseline,constrainedbaseline,high10";
         //url += "&h264-level=52";
         //url += "&TranscodeReasons=AudioCodecNotSupported,DirectPlayError";
-        url += "&PlaySessionId=" + new Date().getTime(); 
+        url += "&PlaySessionId=" + playing_session_id; 
         url += "&api_key=" + ApiClient._serverInfo.AccessToken;
         url += "&n=" + new Date().getTime();
         var url = ApiClient.getUrl(url);
@@ -124,7 +153,8 @@ define(['mainTabsManager', 'dialogHelper'], function (
         html += '<div class="formDialogContent" style="margin:2em;">';
         html += '<div class="dialogContentInner" style="max-width: 100%; justify-content: center;">';
 
-        var video_url = GetVideoUrl(item_info.Id, start_time_offset);
+        var playing_session_id = new Date().getTime()
+        var video_url = GetVideoUrl(item_info.Id, start_time_offset, playing_session_id);
         console.log("Chapter Play URL : " + video_url);
 
         html += '<table style="width:100%;"><tr><td style="text-align: center;">';
@@ -156,6 +186,11 @@ define(['mainTabsManager', 'dialogHelper'], function (
             else {
                 progress.style.backgroundColor = "#FF0000";
             }
+        });
+
+        dlg.addEventListener("closing", function () {
+            console.log("Dlg Closing");
+            StopPlayChapter(item_info.Id, playing_session_id);
         });
 
         dlg.querySelectorAll('.btnCancel').forEach(btn => {
