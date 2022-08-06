@@ -278,12 +278,12 @@ namespace ChapterApi
             List<string> command_params = new List<string>();
 
             command_params.Add("-accurate_seek");
-            command_params.Add(string.Format("-ss {0}", ts_start));
-            command_params.Add(string.Format("-t {0}", ts_duration));
             command_params.Add("-i \"" + media_path + "\"");
+            command_params.Add(string.Format("-ss {0}", ts_start.TotalSeconds));
+            command_params.Add(string.Format("-t {0}", ts_duration.TotalSeconds));
             command_params.Add("-ac 1");
             command_params.Add("-acodec pcm_s16le");
-            command_params.Add("-ar 16000");
+            command_params.Add("-ar 44100");
             command_params.Add("-c:v nul");
             command_params.Add("-f wav");
             command_params.Add("-");
@@ -341,12 +341,12 @@ namespace ChapterApi
             List<string> command_params = new List<string>();
 
             command_params.Add("-accurate_seek");
-            command_params.Add(string.Format("-ss {0}", ts_start));
-            command_params.Add(string.Format("-t {0}", ts_duration));
             command_params.Add("-i \"" + media_path + "\"");
+            command_params.Add(string.Format("-ss {0}", ts_start.TotalSeconds));
+            command_params.Add(string.Format("-t {0}", ts_duration.TotalSeconds));
             command_params.Add("-ac 1");
             command_params.Add("-acodec pcm_s16le");
-            command_params.Add("-ar 16000");
+            command_params.Add("-ar 44100");
             command_params.Add("-c:v nul");
             command_params.Add("-f chromaprint");
             command_params.Add("-fp_format raw");
