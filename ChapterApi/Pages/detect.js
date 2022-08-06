@@ -451,13 +451,19 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
     function RefreshJobs(view) {
 
+        // clear jobs info data
         const job_info_summary = view.querySelector("#job_info");
         job_info_summary.innerHTML = "";
         const job_item_list = view.querySelector("#job_item_list");
         while (job_item_list.firstChild) {
             job_item_list.removeChild(job_item_list.firstChild);
         }
+        const add_chapters_form = view.querySelector("#add_chapters_form");
+        while (add_chapters_form.firstChild) {
+            add_chapters_form.removeChild(add_chapters_form.firstChild);
+        }
 
+        // show jobs
         const job_list = view.querySelector("#job_list");
 
         // clear table
