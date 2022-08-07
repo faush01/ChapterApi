@@ -261,7 +261,9 @@ define(['mainTabsManager', 'dialogHelper'], function (
     function InsertChapters(view, job_id) {
         console.log("InsertChapters : " + job_id);
 
-        //alert("Inserting Chapters : " + job_id);
+        if (!confirm("This will replace all existing intro chapter information with the job results!\nAre you sure?")) {
+            return;
+        }
         
         var url = "chapter_api/insert_chapters";
         url += "?id=" + job_id;
@@ -451,31 +453,35 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
     function RefreshJobs(view) {
 
-        // clear jobs info data
-        const job_info_summary = view.querySelector("#job_info");
-        job_info_summary.innerHTML = "";
-        const job_item_list = view.querySelector("#job_item_list");
-        while (job_item_list.firstChild) {
-            job_item_list.removeChild(job_item_list.firstChild);
-        }
-        const add_chapters_form = view.querySelector("#add_chapters_form");
-        while (add_chapters_form.firstChild) {
-            add_chapters_form.removeChild(add_chapters_form.firstChild);
-        }
+        const refresh_jobs_button = view.querySelector("#refresh_jobs");
+        refresh_jobs_button.disabled = true;
 
         // show jobs
         const job_list = view.querySelector("#job_list");
 
-        // clear table
-        while (job_list.firstChild) {
-            job_list.removeChild(job_list.firstChild);
-        }
-
         var url = "chapter_api/get_job_list?stamp=" + new Date().getTime();
         url = ApiClient.getUrl(url);
 
-        ApiClient.getApiData(url).then(function (job_list_data) {
+        ApiClient.getApiData(url)
+        .then(function (job_list_data) {
             console.log("Job List Data: " + JSON.stringify(job_list_data));
+
+            // clear jobs info data
+            const job_info_summary = view.querySelector("#job_info");
+            job_info_summary.innerHTML = "";
+            const job_item_list = view.querySelector("#job_item_list");
+            while (job_item_list.firstChild) {
+                job_item_list.removeChild(job_item_list.firstChild);
+            }
+            const add_chapters_form = view.querySelector("#add_chapters_form");
+            while (add_chapters_form.firstChild) {
+                add_chapters_form.removeChild(add_chapters_form.firstChild);
+            }
+
+            // clear table
+            while (job_list.firstChild) {
+                job_list.removeChild(job_list.firstChild);
+            }
 
             var selected_exists = false;
 
@@ -538,6 +544,11 @@ define(['mainTabsManager', 'dialogHelper'], function (
             if (selected_exists) {
                 PopulateJobInfo(view, selected_job_id);
             }
+
+            
+        })
+        .finally(() => {
+            refresh_jobs_button.disabled = false;
         });
 
     }
