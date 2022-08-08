@@ -290,7 +290,7 @@ namespace ChapterApi
 
             string param_string = string.Join(" ", command_params);
 
-            _logger.Info("Extracting chromaprint : " + ffmpeg_path + " " + param_string);
+            _logger.Info("Extracting wav data : " + ffmpeg_path + " " + param_string);
 
             ProcessStartInfo start_info = new ProcessStartInfo(ffmpeg_path, param_string);
             start_info.RedirectStandardOutput = true;
@@ -303,7 +303,7 @@ namespace ChapterApi
             using (Process process = new Process() { StartInfo = start_info })
             {
                 process.Start();
-                FileStream baseStream = process.StandardOutput.BaseStream as FileStream;
+                Stream baseStream = process.StandardOutput.BaseStream as Stream;
                 using (MemoryStream ms = new MemoryStream())
                 {
                     int last_read = 0;
@@ -313,10 +313,9 @@ namespace ChapterApi
                         last_read = baseStream.Read(buffer, 0, buffer.Length);
                         ms.Write(buffer, 0, last_read);
                     } while (last_read > 0);
-
                     chroma_bytes = ms.ToArray();
                 }
-
+                process.WaitForExit(1000 * 5);
                 return_code = process.ExitCode;
             }
 
@@ -367,9 +366,7 @@ namespace ChapterApi
             using (Process process = new Process() { StartInfo = start_info })
             {
                 process.Start();
-                //process.WaitForExit(1000 * 60 * 3);
-
-                FileStream baseStream = process.StandardOutput.BaseStream as FileStream;
+                Stream baseStream = process.StandardOutput.BaseStream as Stream;
                 using (MemoryStream ms = new MemoryStream())
                 {
                     int last_read = 0;
@@ -379,10 +376,9 @@ namespace ChapterApi
                         last_read = baseStream.Read(buffer, 0, buffer.Length);
                         ms.Write(buffer, 0, last_read);
                     } while (last_read > 0);
-
                     chroma_bytes = ms.ToArray();
                 }
-
+                process.WaitForExit(1000 * 5);
                 return_code = process.ExitCode;
             }
 
