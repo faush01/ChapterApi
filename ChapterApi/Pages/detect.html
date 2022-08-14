@@ -5,28 +5,41 @@
         <div class="content-primary">
             <div>Detect Intros</div>
 
-            <table>
+            <table style="width: 100%">
                 <tr>
-                    <td>Items</td>
                     <td>
-                        <select id="series_list"></select>
-                        <select id="season_list">
-                            <option value='-1'>All Season</option>
-                        </select>
-                        <select id="episode_list">
-                            <option value='-1'>All Episodes</option>
-                        </select>
+                        <table>
+                            <tr>
+                                <td>Items</td>
+                                <td>
+                                    <select id="series_list"></select>
+                                    <select id="season_list">
+                                        <option value='-1'>All Season</option>
+                                    </select>
+                                    <select id="episode_list">
+                                        <option value='-1'>All Episodes</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Into Info</td>
+                                <td><input type="file" id="theme_info_file" /></td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td><button id="run_detection">Add Job</button></td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td align="right">
+                        <a href="https://themeservice.azurewebsites.net" target="_blank" style="color:inherit; text-decoration:none;">
+                            <img src="https://themeservice.azurewebsites.net/media/logo_small.png" width="185" /><br />
+                            Theme Service
+                        </a>
                     </td>
                 </tr>
-                <tr>
-                    <td>Into Info</td>
-                    <td><input type="file" id="theme_info_file" /></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td><button id="run_detection">Add Job</button></td>
-                </tr>
             </table>
+
 
             <hr />
             <button id="refresh_jobs">Refresh</button>

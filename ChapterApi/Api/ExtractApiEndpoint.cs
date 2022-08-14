@@ -98,14 +98,18 @@ namespace ChapterApi
 
         private string GetJsonString(Dictionary<string, object> data)
         {
+            List<Type> num_types = new List<Type>() { typeof(int), typeof(long), typeof(double) };
             StringBuilder sb = new StringBuilder(4096);
             int i = 0;
             sb.Append("{\r\n");
             foreach (var x in data)
             {
                 string value = "";
-                Type value_type = x.Value.GetType();
-                if (value_type == typeof(int) || value_type == typeof(long) || value_type == typeof(double))
+                if (x.Value == null)
+                {
+                    value = "null";
+                }
+                else if (num_types.Contains(x.Value.GetType()))
                 {
                     value = x.Value.ToString();
                 }
@@ -162,10 +166,10 @@ namespace ChapterApi
             }
 
             theme_data.Add("series", episode.SeriesName);
-            int s_index = episode.ParentIndexNumber ?? -1;
-            theme_data.Add("season", s_index);
+            //int s_index = episode.ParentIndexNumber ?? -1;
+            theme_data.Add("season", episode.ParentIndexNumber);
             //int e_index = episode.IndexNumber ?? -1;
-            //theme_data.Add("episode", e_index);
+            theme_data.Add("episode", episode.IndexNumber);
 
             List<string> wanted_prividers = new List<string> { "tvdb", "imdb" , "tmdb" };
             bool provider_found = false;
@@ -239,7 +243,7 @@ namespace ChapterApi
             }
             filename += "-";
             filename += "s" + (episode.ParentIndexNumber ?? 0).ToString("D2");
-            //filename += "e" + (episode.IndexNumber ?? 0).ToString("D2");
+            filename += "e" + (episode.IndexNumber ?? 0).ToString("D2");
 
             if (request.type == 2)
             {
