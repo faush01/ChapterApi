@@ -33,6 +33,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -64,6 +65,7 @@ namespace ChapterApi
     //[Authenticated]
     public class AddDetectionJob : IReturn<Object>
     {
+        public string ZipData { get; set; }
         public string IntroInfo { get; set; }
         public int ItemId { get; set; }
         public string JobType { get; set; }
@@ -407,6 +409,38 @@ namespace ChapterApi
             return remove_result;
         }
 
+        private void ExtractZippedIntroData(string zip_data, List<IntroInfo> intro_items)
+        {
+            byte[] zip_bytes = _jsonSerializer.DeserializeFromString(zip_data, typeof(byte[])) as byte[];
+            _logger.Info("ZipBytesLen : " + zip_bytes.Length);
+
+            using (MemoryStream zip_ms = new MemoryStream(zip_bytes))
+            {
+                using (ZipArchive archive = new ZipArchive(zip_ms, ZipArchiveMode.Read))
+                {
+                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    {
+                        _logger.Info("ArchiveEntry: " + entry.Name);
+
+                        if (!string.IsNullOrEmpty(entry.Name) && entry.Name.ToLower().EndsWith(".json"))
+                        {
+                            using (StreamReader st = new StreamReader(entry.Open()))
+                            {
+                                string entry_data = st.ReadToEnd();
+                                //_logger.Info("Entry Data : " + entry_data);
+                                IntroInfo info = _jsonSerializer.DeserializeFromString(entry_data, typeof(IntroInfo)) as IntroInfo;
+                                if (info != null)
+                                {
+                                    _logger.Info("Adding info from zip : " + entry.Name);
+                                    intro_items.Add(info);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public object Post(AddDetectionJob request)
         {
             Dictionary<string, object> add_result = new Dictionary<string, object>();
@@ -414,21 +448,38 @@ namespace ChapterApi
             _logger.Info("ItemId      : " + request.ItemId);
             _logger.Info("JobType     : " + request.JobType);
 
-            IntroInfo intro_cp_info = _jsonSerializer.DeserializeFromString(request.IntroInfo, typeof(IntroInfo)) as IntroInfo;
+            List<IntroInfo> intro_cp_info_items = new List<IntroInfo>();
 
-            if (intro_cp_info == null)
+            if (request.ZipData != null)
+            {
+                _logger.Info("ZipDataLen  : " + request.ZipData.Length);
+                //_logger.Info("ZipData     : " + request.ZipData);
+                ExtractZippedIntroData(request.ZipData, intro_cp_info_items);
+            }
+            else
+            {
+                IntroInfo info = _jsonSerializer.DeserializeFromString(request.IntroInfo, typeof(IntroInfo)) as IntroInfo;
+                if (info != null)
+                {
+                    intro_cp_info_items.Add(info);
+                }
+            }
+
+            if(intro_cp_info_items.Count == 0)
             {
                 add_result.Add("Status", "Failed");
-                add_result.Add("Message", "Failed to extract chromaprint data from submitted file");
+                add_result.Add("Message", "Failed to extract intro info data from submitted file");
                 return add_result;
             }
 
+            IntroInfo intro_cp_info = intro_cp_info_items[0];
+
             _logger.Info("series      : " + intro_cp_info.series);
             _logger.Info("season      : " + intro_cp_info.season);
+            _logger.Info("episode     : " + intro_cp_info.episode);
             _logger.Info("tvdb        : " + intro_cp_info.tvdb);
             _logger.Info("imdb        : " + intro_cp_info.imdb);
             _logger.Info("tmdb        : " + intro_cp_info.tmdb);
-            _logger.Info("duration    : " + intro_cp_info.duration);
             _logger.Info("extract     : " + intro_cp_info.extract);
             _logger.Info("cp_data_md5 : " + intro_cp_info.cp_data_md5);
             _logger.Info("cp_data     : " + intro_cp_info.cp_data);

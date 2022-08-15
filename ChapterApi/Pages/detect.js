@@ -61,20 +61,37 @@ define(['mainTabsManager', 'dialogHelper'], function (
         });
     };
 
-    function SendJobData(view, file_content, job_type, item_id) {
+    function SendJobData(view, file_content, job_type, item_id, file_ext) {
 
-        var query_data = {
-            IntroInfo: file_content,
-            ItemId: item_id,
-            JobType: job_type
-        };
+        let query_data;
 
-        var url = "chapter_api/add_detection_job?stamp=" + new Date().getTime();
+        if (file_ext === ".zip") {
+            let buffer = JSON.stringify(Array.from(new Uint8Array(file_content)));
+            query_data = {
+                ZipData: buffer,
+                ItemId: item_id,
+                JobType: job_type
+            };
+        }
+        else if (file_ext === ".json") {
+            query_data = {
+                IntroInfo: file_content,
+                ItemId: item_id,
+                JobType: job_type
+            };
+        }
+
+        let url = "chapter_api/add_detection_job?stamp=" + new Date().getTime();
         url = ApiClient.getUrl(url);
 
         ApiClient.sendPostQuery(url, query_data).then(function (result) {
             console.log("Job creation results : " + JSON.stringify(result));
-            RefreshJobs(view);
+            if (result.Status === "Failed") {
+                alert("Add Job Action Failed\n" + result.Message);
+            }
+            else {
+                RefreshJobs(view);
+            }
         });
         
     }
@@ -122,21 +139,39 @@ define(['mainTabsManager', 'dialogHelper'], function (
             return;
         }
 
+        var file_name = theme_info_file.files[0].name;
+        var file_ext = "none";
+        var index_of = file_name.lastIndexOf(".");
+        if (index_of > 0) {
+            file_ext = file_name.substring(index_of);
+            file_ext = file_ext.toLowerCase(file_ext);
+        }
+
+        if (file_ext !== ".zip" && file_ext !== ".json") {
+            alert("File type not acceptable, needs to be (zip or json)");
+            return;
+        }
+
         const selected_file = theme_info_file.files[0];
         //console.log(selected_file);
 
         const reader = new FileReader();
-        reader.readAsText(selected_file, "UTF-8");
+        if (file_ext === ".json") {
+            reader.readAsText(selected_file, "UTF-8");
+        }
+        else if (file_ext === ".zip") {
+            reader.readAsArrayBuffer(selected_file);
+        }
 
         reader.onload = (evt) => {
             console.log("SendJobData");
             const job_data_string = evt.target.result;
+            /*
             try {
                 const job_data = JSON.parse(job_data_string);
 
                 let message = "\n";
                 message += "Series : " + job_data.series + "\n";
-                message += "Duration : " + job_data.duration + " sec\n";
                 message += "Extract : " + job_data.extract + " minutes\n";
                 message += "tvdb : " + job_data.tvdb + "\n";
                 message += "imdb : " + job_data.imdb + "\n";
@@ -152,8 +187,8 @@ define(['mainTabsManager', 'dialogHelper'], function (
                 alert("Error parsing Intro Info file :\n" + e);
                 return;
             }
-
-            SendJobData(view, job_data_string, job_type, item_id);
+            */
+            SendJobData(view, job_data_string, job_type, item_id, file_ext);
         };
 
         reader.onerror = (evt) => {
