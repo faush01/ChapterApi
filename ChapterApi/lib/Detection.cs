@@ -125,7 +125,7 @@ namespace ChapterApi
             }
 
             List<uint> distances = GetDistances(episode_cp_uints, theme_cp_uints);
-
+            job_item.distances = distances;
             int? best_start_offset = GetBestOffset(distances, job_item);
 
             if (best_start_offset == null)
@@ -172,6 +172,7 @@ namespace ChapterApi
         {
             uint sum_distances = 0;
             uint min_dist = uint.MaxValue;
+            uint max_dist = uint.MinValue;
             int? min_offset = null;
             for (int x = 0; x < distances.Count; x++)
             {
@@ -181,17 +182,26 @@ namespace ChapterApi
                     min_dist = distances[x];
                     min_offset = x;
                 }
+                if(distances[x] > max_dist)
+                {
+                    max_dist = distances[x];
+                }
             }
 
             double average_distance = sum_distances / distances.Count;
             uint distance_threshold = (uint)(average_distance * 0.5);  // TODO: find a good threshold
 
+            job_item.sum_distance = sum_distances;
+            job_item.max_distance = max_dist;
             job_item.min_distance = min_dist;
             job_item.avg_distance = average_distance;
             job_item.dist_threshold = distance_threshold;
             job_item.min_offset = min_offset;
 
+            //_logger.Info("Distance List       : " + string.Join(",", distances));
+            _logger.Info("Distance Sum        : " + sum_distances);
             _logger.Info("Min Distance        : " + min_dist);
+            _logger.Info("Max Distance        : " + max_dist);
             _logger.Info("Average Distance    : " + average_distance);
             _logger.Info("Distance Threshold  : " + distance_threshold);
             _logger.Info("Min Distance Offset : " + min_offset);

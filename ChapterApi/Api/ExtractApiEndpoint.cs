@@ -224,8 +224,8 @@ namespace ChapterApi
             TimeSpan intro_start_time = new TimeSpan(intro_start.Value);
             TimeSpan intro_end_time = new TimeSpan(intro_end.Value);
 
-            double duration = Math.Round((intro_end_time - intro_start_time).TotalSeconds, 3);
-            theme_data.Add("duration", duration);
+            //double duration = Math.Round((intro_end_time - intro_start_time).TotalSeconds, 3);
+            //theme_data.Add("duration", duration);
 
             int intro_extract_span = (int)((intro_end_time.TotalSeconds * 1.5) + 0.5);
             intro_extract_span = (intro_extract_span / 60) / 5;

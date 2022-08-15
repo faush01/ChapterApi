@@ -66,11 +66,14 @@ namespace ChapterApi
         public long end_time_ticks { set; get; }
         public string duration_time { set; get; }
         public long duration_time_ticks { set; get; }
+        public uint sum_distance { set; get; }
         public uint min_distance { set; get; }
+        public uint max_distance { set; get; }
         public double avg_distance { set; get; }
         public uint dist_threshold { set; get; }
         public int? min_offset { set; get; }
         public bool min_dist_found { set; get; } = false;
+        public List<uint> distances { set; get; }
     }
 
 
