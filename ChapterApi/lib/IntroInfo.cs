@@ -15,5 +15,6 @@ namespace ChapterApi
         public int extract { get; set; }
         public string cp_data { get; set; }
         public string cp_data_md5 { get; set; }
+        public byte[] cp_data_bytes { get; set; }
     }
 }

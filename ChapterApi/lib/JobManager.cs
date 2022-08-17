@@ -45,9 +45,8 @@ namespace ChapterApi
         public DateTime added { get; } = DateTime.Now;
         public JobStatus status { get; set; } = JobStatus.Waiting;
         public string name { get; set; }
-        public IntroInfo intro_info { get; set; }
+        public List<IntroInfo> intro_info_list { get; set; } = new List<IntroInfo>();
         public List<DetectionJobItem> items { get; } = new List<DetectionJobItem>();
-        public byte[] intro_cp_data { get; set; }
         public string ffmpeg_path { get; set; }
         public string message { get; set; }
     }
@@ -57,8 +56,17 @@ namespace ChapterApi
         public BaseItem item { get; set; }
         public string name { set; get; }
         public JobItemStatus status { get; set; } = JobItemStatus.Waiting;
-        public int cp_data_len { get; set; }
-        public string detection_duration { set; get; }
+        public List<DetectionResult> detection_result_list { get; set; } = new List<DetectionResult>();
+        public DetectionResult detection_result { get; set; }
+        public string job_duration { set; get; }
+        public double job_total_time { set; get; }
+        public double job_extract_time {  set; get; }
+        public double job_detect_time { set; get; }
+    }
+
+    public class DetectionResult
+    {
+        public IntroInfo intro_info { get; set; }
         public bool found_intro { get; set; } = false;
         public string start_time { set; get; }
         public long start_time_ticks { set; get; }
@@ -75,7 +83,6 @@ namespace ChapterApi
         public bool min_dist_found { set; get; } = false;
         public List<uint> distances { set; get; }
     }
-
 
     public class JobManager
     {
@@ -213,7 +220,7 @@ namespace ChapterApi
             foreach (DetectionJobItem item in job.items)
             {
                 //Thread.Sleep(10000);
-                detector.ProcessJobItem(item, job.intro_info.extract, job.intro_cp_data);
+                detector.ProcessJobItem(item, job.intro_info_list);
                 item.status = JobItemStatus.Complete;
 
                 if (job.status == JobStatus.Canceled)

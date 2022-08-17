@@ -157,6 +157,11 @@ namespace ChapterApi
 
         private void InsertChapters(DetectionJobItem job_item)
         {
+            if (job_item.detection_result == null || job_item.detection_result.found_intro == false)
+            {
+                return;
+            }
+
             // get chapters
             List<ChapterInfo> chapters = _ir.GetChapters(job_item.item);
 
@@ -174,13 +179,13 @@ namespace ChapterApi
             ChapterInfo intro_start = new ChapterInfo();
             intro_start.MarkerType = MarkerType.IntroStart;
             intro_start.Name = "IntroStart";
-            intro_start.StartPositionTicks = job_item.start_time_ticks;
+            intro_start.StartPositionTicks = job_item.detection_result.start_time_ticks;
             new_chapters.Add(intro_start);
 
             ChapterInfo intro_end = new ChapterInfo();
             intro_end.MarkerType = MarkerType.IntroEnd;
             intro_end.Name = "IntroEnd";
-            intro_end.StartPositionTicks = job_item.end_time_ticks;
+            intro_end.StartPositionTicks = job_item.detection_result.end_time_ticks;
             new_chapters.Add(intro_end);
 
             // sort chapters
@@ -215,7 +220,7 @@ namespace ChapterApi
             int count = 0;
             foreach(DetectionJobItem job_item in job.items)
             {
-                if(job_item.found_intro)
+                if(job_item.detection_result != null && job_item.detection_result.found_intro)
                 {
                     InsertChapters(job_item);
                     count++;
@@ -351,11 +356,23 @@ namespace ChapterApi
 
                     job_item_info.Add("Name", job_item.name);
                     job_item_info.Add("Status", job_item.status);
-                    job_item_info.Add("Found", job_item.found_intro);
-                    job_item_info.Add("StartTime", job_item.start_time);
-                    job_item_info.Add("EndTime", job_item.end_time);
-                    job_item_info.Add("Duration", job_item.duration_time);
-                    job_item_info.Add("Time", job_item.detection_duration);
+
+                    if (job_item.detection_result != null)
+                    {
+                        job_item_info.Add("Found", job_item.detection_result.found_intro);
+                        job_item_info.Add("StartTime", job_item.detection_result.start_time);
+                        job_item_info.Add("EndTime", job_item.detection_result.end_time);
+                        job_item_info.Add("Duration", job_item.detection_result.duration_time);
+                    }
+                    else
+                    {
+                        job_item_info.Add("Found", false);
+                        job_item_info.Add("StartTime", (string)null);
+                        job_item_info.Add("EndTime", (string)null);
+                        job_item_info.Add("Duration", (string)null);
+                    }
+                    
+                    job_item_info.Add("Time", job_item.job_duration);
 
                     job_items.Add(job_item_info);
                 }
@@ -472,40 +489,42 @@ namespace ChapterApi
                 return add_result;
             }
 
-            IntroInfo intro_cp_info = intro_cp_info_items[0];
-
-            _logger.Info("series      : " + intro_cp_info.series);
-            _logger.Info("season      : " + intro_cp_info.season);
-            _logger.Info("episode     : " + intro_cp_info.episode);
-            _logger.Info("tvdb        : " + intro_cp_info.tvdb);
-            _logger.Info("imdb        : " + intro_cp_info.imdb);
-            _logger.Info("tmdb        : " + intro_cp_info.tmdb);
-            _logger.Info("extract     : " + intro_cp_info.extract);
-            _logger.Info("cp_data_md5 : " + intro_cp_info.cp_data_md5);
-            _logger.Info("cp_data     : " + intro_cp_info.cp_data);
-
-            byte[] cp_byte_data = Convert.FromBase64String(intro_cp_info.cp_data);
-
-            string cp_md5 = "";
-            using (MD5 md5 = MD5.Create())
+            // extract and verfy cp data
+            foreach(IntroInfo intro_data in intro_cp_info_items)
             {
-                byte[] hashBytes = md5.ComputeHash(cp_byte_data);
-                cp_md5 = BitConverter.ToString(hashBytes).Replace("-", "").ToUpper();
+                _logger.Info("series      : " + intro_data.series);
+                _logger.Info("season      : " + intro_data.season);
+                _logger.Info("episode     : " + intro_data.episode);
+                _logger.Info("tvdb        : " + intro_data.tvdb);
+                _logger.Info("imdb        : " + intro_data.imdb);
+                _logger.Info("tmdb        : " + intro_data.tmdb);
+                _logger.Info("extract     : " + intro_data.extract);
+                _logger.Info("cp_data_md5 : " + intro_data.cp_data_md5);
+                _logger.Info("cp_data     : " + intro_data.cp_data);
+
+                intro_data.cp_data_bytes = Convert.FromBase64String(intro_data.cp_data);
+
+                string cp_md5_string = "";
+                using (MD5 md5 = MD5.Create())
+                {
+                    byte[] hashBytes = md5.ComputeHash(intro_data.cp_data_bytes);
+                    cp_md5_string = BitConverter.ToString(hashBytes).Replace("-", "").ToUpper();
+                }
+
+                if (intro_data.cp_data_md5 != cp_md5_string)
+                {
+                    add_result.Add("Status", "Failed");
+                    add_result.Add("Message", "MD5 mismatch");
+                    return add_result;
+                }
             }
 
-            if (intro_cp_info.cp_data_md5 != cp_md5)
-            {
-                add_result.Add("Status", "Failed");
-                add_result.Add("Message", "MD5 mismatch");
-                return add_result;
-            }
-
+            // build the job item
             DetectionJob job = new DetectionJob();
             job.ffmpeg_path = _ffmpeg.FfmpegConfiguration.EncoderPath;
-            job.intro_info = intro_cp_info;
-            job.intro_cp_data = cp_byte_data;
+            job.intro_info_list = intro_cp_info_items;
 
-            job.name = intro_cp_info.series + " (" + request.JobType + ")";
+            string series_name = "";
 
             if (request.JobType == "series" || request.JobType == "season")
             {
@@ -526,6 +545,12 @@ namespace ChapterApi
                     job_item.name = item_name;
 
                     job.items.Add(job_item);
+
+                    if(string.IsNullOrEmpty(series_name))
+                    {
+                        Episode ep = episode as Episode;
+                        series_name = ep.SeriesName;
+                    }
                 }
 
             }
@@ -543,8 +568,12 @@ namespace ChapterApi
                 job_item.name = item_name;
 
                 job.items.Add(job_item);
+
+                Episode ep = episode as Episode;
+                series_name = ep.SeriesName;
             }
 
+            job.name = series_name + " (" + request.JobType + ")";
             add_result.Add("ItemCount", job.items.Count);
 
             _jm.AddJob(job);

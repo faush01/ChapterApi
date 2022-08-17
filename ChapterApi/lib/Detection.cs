@@ -35,26 +35,79 @@ namespace ChapterApi
             _logger = log;
         }
 
-        public void ProcessJobItem(DetectionJobItem job_item, int extract, byte[] theme_cp_byte_data)
+        public void ProcessJobItem(DetectionJobItem job_item, List<IntroInfo> intro_info_list)
         {
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
+            Stopwatch stop_watch_total = new Stopwatch();
+            stop_watch_total.Start();
 
             //Thread.Sleep(1000);
-            
-            TimeSpan duration = TimeSpan.FromMinutes(extract);
 
+            // find longest intro extract
+            int extract = int.MinValue;
+            foreach(IntroInfo intro in intro_info_list)
+            {
+                if(intro.extract > extract)
+                {
+                    extract = intro.extract;
+                }
+            }
+            TimeSpan duration = TimeSpan.FromMinutes(extract);
+            
+            // extract cp data from episode
             _logger.Info("Extracted CP from : " + job_item.item.Name);
+            _logger.Info("Extracted CP duration : " + duration);
+
+            Stopwatch stop_watch_extract = new Stopwatch();
+            stop_watch_extract.Start();
+
             byte[] episode_cp_data = ExtractChromaprint(duration, job_item.item.Path);
             _logger.Info("Extracted CP data length : " + episode_cp_data.Length);
-
-            job_item.cp_data_len = episode_cp_data.Length;
-
-            FindBestOffset(episode_cp_data, duration, theme_cp_byte_data, job_item);
             
-            stopWatch.Stop();
-            TimeSpan ts = stopWatch.Elapsed;
-            job_item.detection_duration = ts.TotalSeconds.ToString("#.000");
+            stop_watch_extract.Stop();
+            job_item.job_extract_time = stop_watch_total.Elapsed.TotalMilliseconds;
+
+            // run all the intro detections
+            Stopwatch stop_watch_detect = new Stopwatch();
+            stop_watch_detect.Start();
+
+            job_item.detection_result_list = new List<DetectionResult>();
+            foreach (IntroInfo intro in intro_info_list)
+            {
+                DetectionResult result = FindBestOffset(episode_cp_data, duration, intro.cp_data_bytes);
+                if (result != null)
+                {
+                    result.intro_info = intro;
+                    job_item.detection_result_list.Add(result);
+                }
+            }
+
+            stop_watch_detect.Stop();
+            job_item.job_detect_time = stop_watch_detect.Elapsed.TotalMilliseconds;
+
+            // find the best intro detect result
+            DetectionResult best_result = null;
+            foreach (DetectionResult result in job_item.detection_result_list)
+            {
+                if(best_result == null && result.found_intro)
+                {
+                    best_result = result;
+                }
+
+                if(best_result != null && result.found_intro && result.min_distance < best_result.min_distance)
+                {
+                    best_result = result;
+                }
+            }
+            job_item.detection_result = best_result;
+
+            stop_watch_total.Stop();
+            TimeSpan ts = stop_watch_total.Elapsed;
+            job_item.job_total_time = ts.TotalMilliseconds;
+            job_item.job_duration = ts.TotalSeconds.ToString("#.000");
+
+            _logger.Info("ProcessJobItem Extract Time : " + job_item.job_extract_time);
+            _logger.Info("ProcessJobItem Detect Time  : " + job_item.job_detect_time);
+            _logger.Info("ProcessJobItem Total Time   : " + job_item.job_total_time);
         }
 
         private byte[] ExtractChromaprint(
@@ -109,32 +162,33 @@ namespace ChapterApi
             return chroma_bytes;
         }
 
-        private bool FindBestOffset(
+        private DetectionResult FindBestOffset(
             byte[] episode_cp_bytes,
             TimeSpan duration,
-            byte[] theme_cp_bytes,
-            DetectionJobItem job_item)
+            byte[] theme_cp_bytes)
         {
+            DetectionResult result = new DetectionResult();
+
             List<uint> episode_cp_uints = BytesToInts(episode_cp_bytes);
             List<uint> theme_cp_uints = BytesToInts(theme_cp_bytes);
 
             if (episode_cp_uints.Count == 0 || theme_cp_uints.Count == 0 || theme_cp_uints.Count > episode_cp_uints.Count)
             {
                 _logger.Info("Error with cp data : episode[" + episode_cp_uints.Count + "] theme[" + theme_cp_uints.Count + "]");
-                return false;
+                return null;
             }
 
             List<uint> distances = GetDistances(episode_cp_uints, theme_cp_uints);
-            job_item.distances = distances;
-            int? best_start_offset = GetBestOffset(distances, job_item);
+            result.distances = distances;
+            int? best_start_offset = GetBestOffset(distances, result);
 
             if (best_start_offset == null)
             {
-                job_item.found_intro = false;
+                result.found_intro = false;
                 _logger.Info("Theme not found!");
-                return false;
+                return null;
             }
-            job_item.found_intro = true;
+            result.found_intro = true;
 
             // based on testing it looks like it is about 8.06 ints per second
             // based on the options used in the ffmpeg audio mixing and cp muxing
@@ -153,22 +207,22 @@ namespace ChapterApi
             double theme_end = theme_start + (theme_cp_uints.Count / ints_per_sec);
             TimeSpan ts_end = TimeSpan.FromSeconds(theme_end);
 
-            job_item.start_time = ts_start.ToString(@"hh\:mm\:ss\.fff");
-            job_item.start_time_ticks = ts_start.Ticks;
+            result.start_time = ts_start.ToString(@"hh\:mm\:ss\.fff");
+            result.start_time_ticks = ts_start.Ticks;
 
-            job_item.end_time = ts_end.ToString(@"hh\:mm\:ss\.fff");
-            job_item.end_time_ticks = ts_end.Ticks;
+            result.end_time = ts_end.ToString(@"hh\:mm\:ss\.fff");
+            result.end_time_ticks = ts_end.Ticks;
 
             TimeSpan into_duration = ts_end - ts_start;
-            job_item.duration_time = into_duration.ToString(@"hh\:mm\:ss\.fff");
-            job_item.duration_time_ticks = into_duration.Ticks;
+            result.duration_time = into_duration.ToString(@"hh\:mm\:ss\.fff");
+            result.duration_time_ticks = into_duration.Ticks;
 
             _logger.Info("Theme At : " + ts_start + " - " + ts_end);
 
-            return true;
+            return result;
         }
 
-        private int? GetBestOffset(List<uint> distances, DetectionJobItem job_item)
+        private int? GetBestOffset(List<uint> distances, DetectionResult result)
         {
             uint sum_distances = 0;
             uint min_dist = uint.MaxValue;
@@ -191,12 +245,12 @@ namespace ChapterApi
             double average_distance = sum_distances / distances.Count;
             uint distance_threshold = (uint)(average_distance * 0.5);  // TODO: find a good threshold
 
-            job_item.sum_distance = sum_distances;
-            job_item.max_distance = max_dist;
-            job_item.min_distance = min_dist;
-            job_item.avg_distance = average_distance;
-            job_item.dist_threshold = distance_threshold;
-            job_item.min_offset = min_offset;
+            result.sum_distance = sum_distances;
+            result.max_distance = max_dist;
+            result.min_distance = min_dist;
+            result.avg_distance = average_distance;
+            result.dist_threshold = distance_threshold;
+            result.min_offset = min_offset;
 
             //_logger.Info("Distance List       : " + string.Join(",", distances));
             _logger.Info("Distance Sum        : " + sum_distances);
@@ -208,12 +262,12 @@ namespace ChapterApi
 
             if (min_dist > distance_threshold)
             {
-                job_item.min_dist_found = false;
+                result.min_dist_found = false;
                 _logger.Info("Min distance was not below average distance threshold!");
                 return null;
             }
 
-            job_item.min_dist_found = true;
+            result.min_dist_found = true;
 
             return min_offset;
         }
