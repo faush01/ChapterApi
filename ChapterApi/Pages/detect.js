@@ -311,6 +311,82 @@ define(['mainTabsManager', 'dialogHelper'], function (
         });
     }
 
+    function ShowJobItemInfo(view, job_id, job_item_index) {
+
+        var url = "chapter_api/get_job_item";
+        url += "?id=" + job_id;
+        url += "&item_index=" + job_item_index;
+        url += "&stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
+
+        ApiClient.getApiData(url).then(function (job_item_info) {
+            console.log("Get job item info : " + JSON.stringify(job_item_info));
+
+            var dlg = dialogHelper.createDialog({ removeOnClose: true, size: 'small' });
+            dlg.classList.add('ui-body-a');
+            dlg.classList.add('background-theme-a');
+            dlg.classList.add('formDialog');
+            dlg.style.maxWidth = '50%';
+            dlg.style.maxHeight = '65%';
+
+            var html = '';
+            html += '<div class="formDialogHeader">';
+            html += '<button is="paper-icon-button-light" class="btnCancel autoSize" tabindex="-1">';
+            html += '<i class="md-icon">&#xE5C4;</i>';
+            html += '</button>';
+            html += '<h3 class="formDialogHeaderTitle">Job Item Details</h3>';
+            html += '</div>';
+
+            html += '<div class="formDialogContent" style="margin:2em;">';
+            html += '<div class="dialogContentInner" style="max-width: 100%; justify-content: center; align-content:center; display: flex;">';
+
+            //html += '<canvas id="chart_canvas" width="500" height="150" style="border:1px solid #d3d3d3;">no canvas</canvas>';
+
+            html += '<table style="" padding="5px">';
+
+            html += '<tr><td>Status:</td><td>' + job_item_info.Status + '</td></tr>';
+            html += '<tr><td>Found Intro:</td><td>' + job_item_info.FoundIntro + '</td></tr>';
+
+            html += '<tr><td>Extract Time:</td><td>' + job_item_info.ExtractTime + '</td></tr>';
+            html += '<tr><td>Detect Time:</td><td>' + job_item_info.DetectTime + '</td></tr>';
+            html += '<tr><td>Total Time:</td><td>' + job_item_info.TotalTime + '</td></tr>';
+            
+            html += '<tr><td>Intro MD5:</td><td>' + job_item_info.IntroMD5 + '</td></tr>';
+            html += '<tr><td>Distance Sum:</td><td>' + job_item_info.DistanceSum + '</td></tr>';
+            html += '<tr><td>Distance Max:</td><td>' + job_item_info.DistanceMax + '</td></tr>';
+            html += '<tr><td>Distance Avg:</td><td>' + job_item_info.DistanceAvg + '</td></tr>';
+            html += '<tr><td>Distance Min:</td><td>' + job_item_info.DistanceMin + '</td></tr>';
+            html += '<tr><td>Distance Threshold:</td><td>' + job_item_info.DistanceThreshold + '</td></tr>';
+            html += '<tr><td>Min Offset:</td><td>' + job_item_info.MinOffset + '</td></tr>';
+
+            html += '</table>';
+
+            html += '</div>';
+            html += '</div>';
+
+            dlg.innerHTML = html;
+
+            dlg.querySelectorAll('.btnCancel').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    dialogHelper.close(dlg);
+                });
+            });
+
+            /*
+            var cc = dlg.querySelector("#chart_canvas");
+            var ctx = cc.getContext("2d");
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(300, 150);
+            ctx.stroke();
+            */
+
+            dialogHelper.open(dlg);
+
+        });
+    }
+
+
     function PopulateJobInfo(view, job_id) {
         console.log("Populate Job Info : " + job_id);
 
@@ -367,6 +443,10 @@ define(['mainTabsManager', 'dialogHelper'], function (
                 td.appendChild(document.createTextNode(job_item.Name));
                 td.style.overflow = "hidden";
                 td.style.whiteSpace = "nowrap";
+                td.addEventListener("click", function () {
+                    ShowJobItemInfo(view, job_info_data.Id, 0);
+                });
+
                 tr.appendChild(td);
 
                 td = document.createElement("td");

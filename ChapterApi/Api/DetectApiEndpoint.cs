@@ -26,12 +26,10 @@ using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
-using MediaBrowser.Model.Querying;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Model.Services;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -105,6 +103,14 @@ namespace ChapterApi
         public string id { get; set; }
     }
 
+    [Route("/chapter_api/get_job_item", "GET", Summary = "Gets info for a job work item")]
+    //[Authenticated]
+    public class GetJobItem : IReturn<Object>
+    {
+        public string id { get; set; }
+        public int item_index { get; set; }
+    }
+
     public class DetectApiEndpoint : IService, IRequiresRequest
     {
         private readonly ISessionManager _sessionManager;
@@ -154,6 +160,52 @@ namespace ChapterApi
         }
 
         public IRequest Request { get; set; }
+
+        public object Get(GetJobItem request)
+        {
+            Dictionary<string, object> job_item_info = new Dictionary<string, object>();
+
+            Dictionary<string, DetectionJob> jobs = _jm.GetJobList();
+
+            if (jobs.ContainsKey(request.id))
+            {
+                DetectionJob job = jobs[request.id];
+
+                if(request.item_index < 0 || request.item_index >= job.items.Count)
+                {
+                    job_item_info.Add("Result", "Job Item Index not valid");
+                    return job_item_info;
+                }
+
+                DetectionJobItem job_item = job.items[request.item_index];
+
+                job_item_info.Add("ExtractTime", job_item.job_extract_time);
+                job_item_info.Add("DetectTime", job_item.job_detect_time);
+                job_item_info.Add("TotalTime", job_item.job_total_time);
+                job_item_info.Add("Status", job_item.status);
+
+                if (job_item.detection_result != null)
+                {
+                    job_item_info.Add("FoundIntro", job_item.detection_result.found_intro);
+                    job_item_info.Add("IntroMD5", job_item.detection_result.intro_info.cp_data_md5);
+                    job_item_info.Add("DistanceSum", job_item.detection_result.sum_distance);
+                    job_item_info.Add("DistanceMax", job_item.detection_result.max_distance);
+                    job_item_info.Add("DistanceAvg", job_item.detection_result.avg_distance);
+                    job_item_info.Add("DistanceMin", job_item.detection_result.min_distance);
+                    job_item_info.Add("DistanceThreshold", job_item.detection_result.dist_threshold);
+                    job_item_info.Add("MinOffset", job_item.detection_result.min_offset);
+                    job_item_info.Add("SearchDistances", job_item.detection_result.distances);
+                }
+
+            }
+            else
+            {
+                job_item_info.Add("Result", "Job ID not found");
+                return job_item_info;
+            }
+
+            return job_item_info;
+        }
 
         private void InsertChapters(DetectionJobItem job_item)
         {
@@ -556,8 +608,9 @@ namespace ChapterApi
             }
             else if(request.JobType == "episode")
             {
-                Guid item_guid = _libraryManager.GetGuid(request.ItemId);
-                BaseItem episode = _libraryManager.GetItemById(item_guid);
+                //Guid item_guid = _libraryManager.GetGuid(request.ItemId);
+                //BaseItem episode = _libraryManager.GetItemById(item_guid);
+                BaseItem episode = _libraryManager.GetItemById(request.ItemId);
 
                 DetectionJobItem job_item = new DetectionJobItem();
                 job_item.item = episode;

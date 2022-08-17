@@ -277,8 +277,9 @@ namespace ChapterApi
             List<Dictionary<string, object>> item_path = new List<Dictionary<string, object>>();
             //List<PathItem> item_path = new List<PathItem>();
 
-            Guid item_guid = _libraryManager.GetGuid(request.id);
-            BaseItem item = _libraryManager.GetItemById(item_guid);
+            //Guid item_guid = _libraryManager.GetGuid(request.id);
+            //BaseItem item = _libraryManager.GetItemById(item_guid);
+            BaseItem item = _libraryManager.GetItemById(request.id);
 
             Folder[] collections = _libraryManager.GetCollectionFolders(item);
             foreach (var collection in collections)
@@ -370,10 +371,11 @@ namespace ChapterApi
 
             if (request.parent != 0)
             {
-                Guid item_guid = _libraryManager.GetGuid(request.parent);
-                BaseItem item = _libraryManager.GetItemById(item_guid);
+                //Guid item_guid = _libraryManager.GetGuid(request.parent);
+                //BaseItem item = _libraryManager.GetItemById(item_guid);
+                BaseItem item = _libraryManager.GetItemById(request.parent);
 
-                if(item != null)
+                if (item != null)
                 {
                     _logger.Info(item.Name + " : Item Type(" + item.GetType().Name + ")");
 
@@ -563,8 +565,9 @@ namespace ChapterApi
 
         public object Get(GetItemChapters request)
         {
-            Guid item_guid = _libraryManager.GetGuid(request.id);
-            BaseItem item = _libraryManager.GetItemById(item_guid);
+            //Guid item_guid = _libraryManager.GetGuid(request.id);
+            //BaseItem item = _libraryManager.GetItemById(item_guid);
+            BaseItem item = _libraryManager.GetItemById(request.id);
 
             Dictionary<string, object> responce_data = new Dictionary<string, object>();
 
@@ -620,8 +623,9 @@ namespace ChapterApi
         {
             List<string> actions = new List<string>();
 
-            Guid item_guid = _libraryManager.GetGuid(request.id);
-            BaseItem item = _libraryManager.GetItemById(item_guid);
+            //Guid item_guid = _libraryManager.GetGuid(request.id);
+            //BaseItem item = _libraryManager.GetItemById(item_guid);
+            BaseItem item = _libraryManager.GetItemById(request.id);
 
             List<ChapterInfo> chapters = _ir.GetChapters(item);
 

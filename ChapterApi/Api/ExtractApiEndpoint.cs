@@ -146,10 +146,11 @@ namespace ChapterApi
             Dictionary<string, object> theme_data = new Dictionary<string, object>();
             object responce = null;
 
-            Guid item_guid = _libraryManager.GetGuid(request.id);
-            BaseItem item = _libraryManager.GetItemById(item_guid);
+            //Guid item_guid = _libraryManager.GetGuid(request.id);
+            //BaseItem item = _libraryManager.GetItemById(item_guid);
+            BaseItem item = _libraryManager.GetItemById(request.id);
 
-            if(item == null)
+            if (item == null)
             {
                 string message = "Item id not valid (" + request.id + ")";
                 responce = GetResponceObject("error.txt", "text/html; charset=UTF-8", Encoding.UTF8.GetBytes(message));
