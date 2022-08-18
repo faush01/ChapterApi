@@ -14,6 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
+using MediaBrowser.Controller;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Model.Logging;
 using System;
@@ -88,12 +89,14 @@ namespace ChapterApi
     {
         private static readonly object padlock = new object();
         private static JobManager instance = null;
-        
+
+        private readonly IServerApplicationHost _appHost;
         private readonly ILogger _logger;
         private Dictionary<string, DetectionJob> jobs;
 
-        private JobManager(ILogger logger)
+        private JobManager(ILogger logger, IServerApplicationHost appHost)
         {
+            _appHost = appHost;
             _logger = logger;
             _logger.Info("JobManager Created");
 
@@ -103,13 +106,13 @@ namespace ChapterApi
             t.Start();
         }
 
-        public static JobManager GetInstance(ILogger logger)
+        public static JobManager GetInstance(ILogger logger, IServerApplicationHost appHost)
         {
             lock (padlock)
             {
                 if (instance == null)
                 {
-                    instance = new JobManager(logger);
+                    instance = new JobManager(logger, appHost);
                 }
                 return instance;
             }
@@ -167,7 +170,7 @@ namespace ChapterApi
         public void WorkerThread()
         {
             _logger.Info("Detection WorkerThread Started");
-            while (true)
+            while (_appHost.IsShuttingDown == false)
             {
                 // find next job to work on
                 DetectionJob job = null;
@@ -201,8 +204,15 @@ namespace ChapterApi
                     }
                 }
 
-                Thread.Sleep(5000);
+                if(_appHost.IsShuttingDown)
+                {
+                    break;
+                }
+
+                Thread.Sleep(2000);
             }
+
+            _logger.Info("Detection WorkerThread Exited");
         }
 
         private void ProcessJob(DetectionJob job)

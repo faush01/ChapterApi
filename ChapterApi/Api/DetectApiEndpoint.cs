@@ -14,6 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
+using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
@@ -125,6 +126,7 @@ namespace ChapterApi
         private readonly IItemRepository _ir;
         private readonly IFfmpegManager _ffmpeg;
         private readonly IHttpResultFactory _hrf;
+        private readonly IServerApplicationHost _appHost;
 
         private JobManager _jm;
 
@@ -139,7 +141,8 @@ namespace ChapterApi
             IUserDataManager userDataManager,
             IItemRepository itemRepository,
             IFfmpegManager ffmpegManager,
-            IHttpResultFactory httpResultFactory)
+            IHttpResultFactory httpResultFactory,
+            IServerApplicationHost appHost)
         {
             _logger = logger.GetLogger("ChapterApi - DetectApiEndpoint");
             _jsonSerializer = jsonSerializer;
@@ -153,8 +156,9 @@ namespace ChapterApi
             _ir = itemRepository;
             _ffmpeg = ffmpegManager;
             _hrf = httpResultFactory;
+            _appHost = appHost;
 
-            _jm = JobManager.GetInstance(_logger);
+            _jm = JobManager.GetInstance(_logger, _appHost);
 
             _logger.Info("ChapterApi - DetectApiEndpoint Loaded");
         }
