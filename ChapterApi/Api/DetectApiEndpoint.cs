@@ -179,6 +179,7 @@ namespace ChapterApi
 
                 DetectionJobItem job_item = job.items[request.item_index];
 
+                job_item_info.Add("Name", job_item.name);
                 job_item_info.Add("ExtractTime", job_item.job_extract_time);
                 job_item_info.Add("DetectTime", job_item.job_detect_time);
                 job_item_info.Add("TotalTime", job_item.job_total_time);
@@ -195,6 +196,18 @@ namespace ChapterApi
                     job_item_info.Add("DistanceThreshold", job_item.detection_result.dist_threshold);
                     job_item_info.Add("MinOffset", job_item.detection_result.min_offset);
                     job_item_info.Add("SearchDistances", job_item.detection_result.distances);
+                }
+                else
+                {
+                    job_item_info.Add("FoundIntro", false);
+                    job_item_info.Add("IntroMD5", "");
+                    job_item_info.Add("DistanceSum", "");
+                    job_item_info.Add("DistanceMax", "");
+                    job_item_info.Add("DistanceAvg", "");
+                    job_item_info.Add("DistanceMin", "");
+                    job_item_info.Add("DistanceThreshold", "");
+                    job_item_info.Add("MinOffset", "");
+                    job_item_info.Add("SearchDistances", "");
                 }
 
             }
@@ -401,12 +414,14 @@ namespace ChapterApi
                 job_info.Add("ItemCount", job.items.Count);
 
                 List<Dictionary<string, object>> job_items = new List<Dictionary<string, object>>();
-
+                
+                int item_index = 0;
                 foreach (DetectionJobItem job_item in job.items)
                 {
                     Dictionary<string, object> job_item_info = new Dictionary<string, object>();
 
                     job_item_info.Add("Name", job_item.name);
+                    job_item_info.Add("Index", item_index);
                     job_item_info.Add("Status", job_item.status);
 
                     if (job_item.detection_result != null)
@@ -427,6 +442,7 @@ namespace ChapterApi
                     job_item_info.Add("Time", job_item.job_duration);
 
                     job_items.Add(job_item_info);
+                    item_index++;
                 }
 
                 job_items.Sort(delegate (Dictionary<string, object> c1, Dictionary<string, object> c2)

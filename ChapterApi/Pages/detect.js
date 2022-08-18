@@ -334,7 +334,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
             html += '<button is="paper-icon-button-light" class="btnCancel autoSize" tabindex="-1">';
             html += '<i class="md-icon">&#xE5C4;</i>';
             html += '</button>';
-            html += '<h3 class="formDialogHeaderTitle">Job Item Details</h3>';
+            html += '<h3 class="formDialogHeaderTitle" style="padding-left:20px;"> Job Item: ' + job_item_info.Name + '</h3>';
             html += '</div>';
 
             html += '<div class="formDialogContent" style="margin:2em;">';
@@ -345,12 +345,12 @@ define(['mainTabsManager', 'dialogHelper'], function (
             html += '<table style="" padding="5px">';
 
             html += '<tr><td>Status:</td><td>' + job_item_info.Status + '</td></tr>';
-            html += '<tr><td>Found Intro:</td><td>' + job_item_info.FoundIntro + '</td></tr>';
 
             html += '<tr><td>Extract Time:</td><td>' + job_item_info.ExtractTime + '</td></tr>';
             html += '<tr><td>Detect Time:</td><td>' + job_item_info.DetectTime + '</td></tr>';
             html += '<tr><td>Total Time:</td><td>' + job_item_info.TotalTime + '</td></tr>';
-            
+
+            html += '<tr><td>Found Intro:</td><td>' + job_item_info.FoundIntro + '</td></tr>';            
             html += '<tr><td>Intro MD5:</td><td>' + job_item_info.IntroMD5 + '</td></tr>';
             html += '<tr><td>Distance Sum:</td><td>' + job_item_info.DistanceSum + '</td></tr>';
             html += '<tr><td>Distance Max:</td><td>' + job_item_info.DistanceMax + '</td></tr>';
@@ -440,13 +440,23 @@ define(['mainTabsManager', 'dialogHelper'], function (
                 var tr = document.createElement("tr");
 
                 var td = document.createElement("td");
+                td.style.textAlign = "center";
+                var i = document.createElement("i");
+                i.style.cursor = "pointer";
+                i.style.fontSize = "22px";
+                i.className = "md-icon";
+                i.title = "True";
+                i.appendChild(document.createTextNode("visibility"));
+                i.addEventListener("click", function () {
+                    ShowJobItemInfo(view, job_info_data.Id, job_item.Index);
+                });
+                td.appendChild(i);
+                tr.appendChild(td);
+
+                var td = document.createElement("td");
                 td.appendChild(document.createTextNode(job_item.Name));
                 td.style.overflow = "hidden";
                 td.style.whiteSpace = "nowrap";
-                td.addEventListener("click", function () {
-                    ShowJobItemInfo(view, job_info_data.Id, 0);
-                });
-
                 tr.appendChild(td);
 
                 td = document.createElement("td");
@@ -508,7 +518,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
                 if (job_item.Status !== "Waiting") {
                     var i = document.createElement("i");
                     i.className = "md-icon";
-                    //i.style.fontSize = "20px";
+                    i.style.fontSize = "22px";
                     if (job_item.Found) {
                         i.title = "True";
                         i.appendChild(document.createTextNode("check"));
