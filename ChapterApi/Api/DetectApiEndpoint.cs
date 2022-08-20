@@ -128,7 +128,7 @@ namespace ChapterApi
         private readonly IHttpResultFactory _hrf;
         private readonly IServerApplicationHost _appHost;
 
-        private JobManager _jm;
+        private readonly JobManager _jm;
 
         public DetectApiEndpoint(ILogManager logger,
             IFileSystem fileSystem,
@@ -158,7 +158,7 @@ namespace ChapterApi
             _hrf = httpResultFactory;
             _appHost = appHost;
 
-            _jm = JobManager.GetInstance(_logger, _appHost);
+            _jm = JobManager.GetInstance(_logger);
 
             _logger.Info("ChapterApi - DetectApiEndpoint Loaded");
         }

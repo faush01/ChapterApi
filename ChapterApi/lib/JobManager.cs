@@ -90,13 +90,13 @@ namespace ChapterApi
         private static readonly object padlock = new object();
         private static JobManager instance = null;
 
-        private readonly IServerApplicationHost _appHost;
         private readonly ILogger _logger;
         private Dictionary<string, DetectionJob> jobs;
 
-        private JobManager(ILogger logger, IServerApplicationHost appHost)
+        private bool StopWorker = false;
+
+        private JobManager(ILogger logger)
         {
-            _appHost = appHost;
             _logger = logger;
             _logger.Info("JobManager Created");
 
@@ -106,16 +106,22 @@ namespace ChapterApi
             t.Start();
         }
 
-        public static JobManager GetInstance(ILogger logger, IServerApplicationHost appHost)
+        public static JobManager GetInstance(ILogger logger)
         {
             lock (padlock)
             {
                 if (instance == null)
                 {
-                    instance = new JobManager(logger, appHost);
+                    instance = new JobManager(logger);
                 }
                 return instance;
             }
+        }
+
+        public void StopWorkerThread()
+        {
+            StopWorker = true;
+            _logger.Info("Stopping WorkerThread Thread");
         }
 
         public void AddJob(DetectionJob job)
@@ -170,7 +176,7 @@ namespace ChapterApi
         public void WorkerThread()
         {
             _logger.Info("Detection WorkerThread Started");
-            while (_appHost.IsShuttingDown == false)
+            while (StopWorker == false)
             {
                 // find next job to work on
                 DetectionJob job = null;
@@ -204,7 +210,7 @@ namespace ChapterApi
                     }
                 }
 
-                if(_appHost.IsShuttingDown)
+                if(StopWorker)
                 {
                     break;
                 }

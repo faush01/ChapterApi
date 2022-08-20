@@ -16,7 +16,9 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
+using MediaBrowser.Controller;
 using MediaBrowser.Model.Drawing;
+using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using System;
@@ -26,16 +28,28 @@ using System.Text;
 
 namespace ChapterApi
 {
-    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage
+    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage, IDisposable
     {
         public override string Name => "Chapter API";
         public override Guid Id => new Guid("64d8705e-c1e2-401f-9b64-2592aebde8eb");
         public override string Description => "View and edit chapters";
         public PluginConfiguration PluginConfiguration => Configuration;
+        private readonly ILogger _logger;
+        private readonly JobManager _jm;
 
-        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
+        public Plugin(
+            ILogManager logger,
+            IApplicationPaths applicationPaths, 
+            IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
         {
+            _logger = logger.GetLogger("ChapterApi - Plugin");
+            _jm = JobManager.GetInstance(_logger);
+            _logger.Info("Plugin Loaded");
+        }
 
+        public void Dispose()
+        {
+            _jm.StopWorkerThread();
         }
 
         public IEnumerable<PluginPageInfo> GetPages()
