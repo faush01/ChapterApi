@@ -35,6 +35,7 @@ namespace ChapterApi
         public override Guid Id => new Guid("64d8705e-c1e2-401f-9b64-2592aebde8eb");
         public override string Description => "View and edit chapters";
         public PluginConfiguration PluginConfiguration => Configuration;
+
         private readonly ILogger _logger;
         private readonly JobManager _jm;
 
@@ -88,6 +89,16 @@ namespace ChapterApi
                 {
                     Name = "detect.js",
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.detect.js"
+                },
+                new PluginPageInfo
+                {
+                    Name = "options",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.options.html",
+                },
+                new PluginPageInfo
+                {
+                    Name = "options.js",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.options.js"
                 }
             };
         }
