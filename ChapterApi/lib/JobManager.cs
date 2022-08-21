@@ -14,8 +14,10 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
+using ChapterApi.lib;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Persistence;
 using MediaBrowser.Model.Logging;
 using System;
 using System.Collections.Generic;
@@ -50,6 +52,7 @@ namespace ChapterApi
         public List<DetectionJobItem> items { get; } = new List<DetectionJobItem>();
         public string ffmpeg_path { get; set; }
         public string message { get; set; }
+        public bool auto_insert { get; set; } = false;
     }
 
     public class DetectionJobItem
@@ -90,13 +93,15 @@ namespace ChapterApi
         private static readonly object padlock = new object();
         private static JobManager instance = null;
 
+        private readonly IItemRepository _ir;
         private readonly ILogger _logger;
         private Dictionary<string, DetectionJob> jobs;
 
         private bool StopWorker = false;
 
-        private JobManager(ILogger logger)
+        private JobManager(ILogger logger, IItemRepository ir)
         {
+            _ir = ir;
             _logger = logger;
             _logger.Info("JobManager Created");
 
@@ -106,13 +111,13 @@ namespace ChapterApi
             t.Start();
         }
 
-        public static JobManager GetInstance(ILogger logger)
+        public static JobManager GetInstance(ILogger logger, IItemRepository ir)
         {
             lock (padlock)
             {
                 if (instance == null)
                 {
-                    instance = new JobManager(logger);
+                    instance = new JobManager(logger, ir);
                 }
                 return instance;
             }
@@ -233,11 +238,25 @@ namespace ChapterApi
                 return cmp_restlt;
             });
 
+            ChapterManager chapter_manager = new ChapterManager(_ir);
             foreach (DetectionJobItem item in job.items)
             {
                 //Thread.Sleep(10000);
+                if (StopWorker)
+                {
+                    job.status = JobStatus.Canceled;
+                    break;
+                }
+
+                // detect introes
                 detector.ProcessJobItem(item, job.intro_info_list);
                 item.status = JobItemStatus.Complete;
+
+                // insert detected chapters
+                if (item.detection_result != null && item.detection_result.found_intro && job.auto_insert)
+                {
+                    chapter_manager.InsertChapters(item);
+                }
 
                 if (job.status == JobStatus.Canceled)
                 {

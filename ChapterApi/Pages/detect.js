@@ -61,7 +61,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
         });
     };
 
-    function SendJobData(view, file_content, job_type, item_id, file_ext) {
+    function SendJobData(view, file_content, job_type, item_id, file_ext, auto_insert) {
 
         let query_data;
 
@@ -70,14 +70,16 @@ define(['mainTabsManager', 'dialogHelper'], function (
             query_data = {
                 ZipData: buffer,
                 ItemId: item_id,
-                JobType: job_type
+                JobType: job_type,
+                AutoInsert: auto_insert
             };
         }
         else if (file_ext === ".json") {
             query_data = {
                 IntroInfo: file_content,
                 ItemId: item_id,
-                JobType: job_type
+                JobType: job_type,
+                AutoInsert: auto_insert
             };
         }
 
@@ -98,13 +100,15 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
     function RunDetection(view) {
 
-        var series_list = view.querySelector("#series_list");
-        var season_list = view.querySelector("#season_list");
-        var episode_list = view.querySelector("#episode_list");
+        let series_list = view.querySelector("#series_list");
+        let season_list = view.querySelector("#season_list");
+        let episode_list = view.querySelector("#episode_list");
+        let auto_insert_check = view.querySelector("#chapters_auto_insert");
 
-        var series_id = series_list.options[series_list.selectedIndex].value;
-        var season_id = season_list.options[season_list.selectedIndex].value;
-        var episode_id = episode_list.options[episode_list.selectedIndex].value;
+        let series_id = series_list.options[series_list.selectedIndex].value;
+        let season_id = season_list.options[season_list.selectedIndex].value;
+        let episode_id = episode_list.options[episode_list.selectedIndex].value;
+        let auto_insert = auto_insert_check.checked;
 
         console.log("series_id  : " + series_id);
         console.log("season_id  : " + season_id);
@@ -188,7 +192,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
                 return;
             }
             */
-            SendJobData(view, job_data_string, job_type, item_id, file_ext);
+            SendJobData(view, job_data_string, job_type, item_id, file_ext, auto_insert);
         };
 
         reader.onerror = (evt) => {
@@ -408,7 +412,9 @@ define(['mainTabsManager', 'dialogHelper'], function (
             var job_info_html = "<table>";
             job_info_html += "<tr><td>Job Id</td><td>: " + job_info_data.Id + "</td></tr>";
             job_info_html += "<tr><td>Name</td><td>: " + job_info_data.Name + "</td></tr>";
+            job_info_html += "<tr><td>Auto Insert</td><td>: " + job_info_data.AutoInsert + "</td></tr>";
             job_info_html += "<tr><td>Added</td><td>: " + job_info_data.Added + "</td></tr>";
+            job_info_html += "<tr><td>Intros</td><td>: " + job_info_data.IntroCount + "</td></tr>";
             job_info_html += "<tr><td>Items</td><td>: " + job_info_data.ItemCount + "</td></tr>";
             job_info_html += "<tr><td>Status</td><td>: " + job_info_data.Status + "</td></tr>";
             job_info_html += "</table>";

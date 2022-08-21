@@ -14,6 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
+using ChapterApi.lib;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
@@ -61,51 +62,52 @@ namespace ChapterApi
     }
 
     [Route("/chapter_api/add_detection_job", "POST", Summary = "Add detection job")]
-    //[Authenticated]
+    [Authenticated]
     public class AddDetectionJob : IReturn<Object>
     {
         public string ZipData { get; set; }
         public string IntroInfo { get; set; }
         public int ItemId { get; set; }
         public string JobType { get; set; }
+        public bool AutoInsert { get; set; } = false;
     }
 
     [Route("/chapter_api/get_job_list", "GET", Summary = "Get list of jobs")]
-    //[Authenticated]
+    [Authenticated]
     public class GetJobList : IReturn<Object>
     {
     }
 
     [Route("/chapter_api/get_job_info", "GET", Summary = "Get job info")]
-    //[Authenticated]
+    [Authenticated]
     public class GetJobInfo : IReturn<Object>
     {
         public string id { get; set; }
     }
 
     [Route("/chapter_api/cancel_job", "GET", Summary = "Cancel a job")]
-    //[Authenticated]
+    [Authenticated]
     public class CancelJob : IReturn<Object>
     {
         public string id { get; set; }
     }
 
     [Route("/chapter_api/remove_job", "GET", Summary = "Remove a job")]
-    //[Authenticated]
+    [Authenticated]
     public class RemoveJob : IReturn<Object>
     {
         public string id { get; set; }
     }
 
     [Route("/chapter_api/insert_chapters", "GET", Summary = "Insert detected chapters")]
-    //[Authenticated]
+    [Authenticated]
     public class InsertChapters : IReturn<Object>
     {
         public string id { get; set; }
     }
 
     [Route("/chapter_api/get_job_item", "GET", Summary = "Gets info for a job work item")]
-    //[Authenticated]
+    [Authenticated]
     public class GetJobItem : IReturn<Object>
     {
         public string id { get; set; }
@@ -158,7 +160,7 @@ namespace ChapterApi
             _hrf = httpResultFactory;
             _appHost = appHost;
 
-            _jm = JobManager.GetInstance(_logger);
+            _jm = JobManager.GetInstance(_logger, _ir);
 
             _logger.Info("ChapterApi - DetectApiEndpoint Loaded");
         }
@@ -224,48 +226,6 @@ namespace ChapterApi
             return job_item_info;
         }
 
-        private void InsertChapters(DetectionJobItem job_item)
-        {
-            if (job_item.detection_result == null || job_item.detection_result.found_intro == false)
-            {
-                return;
-            }
-
-            // get chapters
-            List<ChapterInfo> chapters = _ir.GetChapters(job_item.item);
-
-            List<ChapterInfo> new_chapters = new List<ChapterInfo>();
-            // first remove the existing Intro chapters
-            foreach (ChapterInfo ci in chapters)
-            {
-                if(ci.MarkerType != MarkerType.IntroStart && ci.MarkerType != MarkerType.IntroEnd)
-                {
-                    new_chapters.Add(ci);
-                }
-            }
-
-            // add new chapters
-            ChapterInfo intro_start = new ChapterInfo();
-            intro_start.MarkerType = MarkerType.IntroStart;
-            intro_start.Name = "IntroStart";
-            intro_start.StartPositionTicks = job_item.detection_result.start_time_ticks;
-            new_chapters.Add(intro_start);
-
-            ChapterInfo intro_end = new ChapterInfo();
-            intro_end.MarkerType = MarkerType.IntroEnd;
-            intro_end.Name = "IntroEnd";
-            intro_end.StartPositionTicks = job_item.detection_result.end_time_ticks;
-            new_chapters.Add(intro_end);
-
-            // sort chapters
-            new_chapters.Sort(delegate (ChapterInfo c1, ChapterInfo c2)
-            {
-                return c1.StartPositionTicks.CompareTo(c2.StartPositionTicks);
-            });
-
-            _ir.SaveChapters(job_item.item.InternalId, new_chapters);
-        }
-
         public object Get(InsertChapters request)
         {
             Dictionary<string, object> add_result = new Dictionary<string, object>();
@@ -286,12 +246,14 @@ namespace ChapterApi
                 return add_result;
             }
 
+            ChapterManager chaper_manager = new ChapterManager(_ir);
+
             int count = 0;
             foreach(DetectionJobItem job_item in job.items)
             {
                 if(job_item.detection_result != null && job_item.detection_result.found_intro)
                 {
-                    InsertChapters(job_item);
+                    chaper_manager.InsertChapters(job_item);
                     count++;
                 }
             }
@@ -413,9 +375,11 @@ namespace ChapterApi
 
                 job_info.Add("Id", request.id);
                 job_info.Add("Name", job.name);
+                job_info.Add("AutoInsert", job.auto_insert);
                 job_info.Add("Status", job.status);
                 job_info.Add("Added", job.added.ToString("yyyy-MM-dd HH:mm:ss"));
                 job_info.Add("ItemCount", job.items.Count);
+                job_info.Add("IntroCount", job.intro_info_list.Count);
 
                 List<Dictionary<string, object>> job_items = new List<Dictionary<string, object>>();
                 
@@ -595,6 +559,7 @@ namespace ChapterApi
             DetectionJob job = new DetectionJob();
             job.ffmpeg_path = _ffmpeg.FfmpegConfiguration.EncoderPath;
             job.intro_info_list = intro_cp_info_items;
+            job.auto_insert = request.AutoInsert;
 
             string series_name = "";
 

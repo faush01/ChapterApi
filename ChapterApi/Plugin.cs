@@ -17,6 +17,7 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Controller;
+using MediaBrowser.Controller.Persistence;
 using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Plugins;
@@ -39,11 +40,12 @@ namespace ChapterApi
 
         public Plugin(
             ILogManager logger,
-            IApplicationPaths applicationPaths, 
+            IApplicationPaths applicationPaths,
+            IItemRepository ir,
             IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
         {
             _logger = logger.GetLogger("ChapterApi - Plugin");
-            _jm = JobManager.GetInstance(_logger);
+            _jm = JobManager.GetInstance(_logger, ir);
             _logger.Info("Plugin Loaded");
         }
 
