@@ -62,6 +62,55 @@ define(['mainTabsManager', 'dialogHelper'], function (
         });
     };
 
+    function PopulateSettingsPage(view) {
+
+        ApiClient.getNamedConfiguration("chapter_api").then(function (config) {
+            console.log("Config Options : " + JSON.stringify(config));
+
+            const keep_for_options = view.querySelector("#keep_for");
+            keep_for_options.value = config.KeepFinishdJobFor;
+
+            var intro_data_path_label = view.querySelector('#intro_data_path_label');
+            intro_data_path_label.innerHTML = config.IntroDataPath;
+        });
+
+    }
+
+    function KeepForSelectedChanged(selector) {
+
+        ApiClient.getNamedConfiguration("chapter_api").then(function (config) {
+            console.log("Config Options : " + JSON.stringify(config));
+            let keep_for = selector.value;
+            console.log("Keep For New : " + keep_for);
+            config.KeepFinishdJobFor = keep_for;
+            ApiClient.updateNamedConfiguration("chapter_api", config);
+        });
+    }
+
+    function showDataPathPathPicker(view) {
+        require(['directorybrowser'], function (directoryBrowser) {
+            var picker = new directoryBrowser();
+            picker.show({
+                includeFiles: false,
+                callback: function (selected) {
+                    picker.close();
+                    dataPathSelectedCallBack(selected, view);
+                },
+                header: "Select Intro Data Path"
+            });
+        });
+    }
+
+    function dataPathSelectedCallBack(selectedDir, view) {
+        ApiClient.getNamedConfiguration("chapter_api").then(function (config) {
+            config.IntroDataPath = selectedDir;
+            console.log("New Config Settings : " + JSON.stringify(config));
+            ApiClient.updateNamedConfiguration("chapter_api", config);
+
+            var intro_data_path_label = view.querySelector('#intro_data_path_label');
+            intro_data_path_label.innerHTML = selectedDir;
+        });
+    }
 
     return function (view, params) {
 
@@ -70,13 +119,17 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
             mainTabsManager.setTabs(this, 3, getTabList);
 
-            ApiClient.getNamedConfiguration("chapter_api").then(function (config) {
-                config.IntroDataPath = "C:\\Data\\IntroDetect\\Data";
-                console.log("New Config Settings : " + JSON.stringify(config));
+            PopulateSettingsPage(view);
 
-                ApiClient.updateNamedConfiguration("chapter_api", config);
+            const keep_for_options = view.querySelector("#keep_for");
+            keep_for_options.addEventListener("change", function () {
+                KeepForSelectedChanged(this);
             });
 
+            var set_data_path = view.querySelector('#set_intro_data_path');
+            set_data_path.addEventListener("click", function () {
+                showDataPathPathPicker(view);
+            });
 
         });
 

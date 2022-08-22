@@ -15,6 +15,7 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
 using ChapterApi.lib;
+using ChapterApi.options;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
@@ -381,6 +382,21 @@ namespace ChapterApi
                 job_info.Add("ItemCount", job.items.Count);
                 job_info.Add("IntroCount", job.intro_info_list.Count);
 
+                job_info.Add("KeepFor", job.keep_finished_for);
+                if(job.finished != null)
+                {
+                    job_info.Add("Finished", job.finished.Value.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                    DateTime delete_at = job.finished.Value + TimeSpan.FromHours(job.keep_finished_for);
+                    TimeSpan time_to_delete = delete_at - DateTime.Now;
+                    job_info.Add("RemoveIn", time_to_delete.ToString(@"d\.hh\:mm\:ss"));
+                }
+                else
+                {
+                    job_info.Add("Finished", "");
+                    job_info.Add("RemoveIn", "");
+                }
+                
                 List<Dictionary<string, object>> job_items = new List<Dictionary<string, object>>();
                 
                 int item_index = 0;
@@ -560,6 +576,10 @@ namespace ChapterApi
             job.ffmpeg_path = _ffmpeg.FfmpegConfiguration.EncoderPath;
             job.intro_info_list = intro_cp_info_items;
             job.auto_insert = request.AutoInsert;
+
+            // set the keep for based on options
+            ChapterApiOptions config = _config.GetReportPlaybackOptions();
+            job.keep_finished_for = config.KeepFinishdJobFor;
 
             string series_name = "";
 

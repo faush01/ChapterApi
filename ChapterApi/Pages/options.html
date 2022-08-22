@@ -3,8 +3,33 @@
      data-controller="__plugin/options.js">
     <div data-role="content">
         <div class="content-primary">
-            <div>Options</div>
+            <h3>Options</h3>
 
+            <table>
+
+                <tr>
+                    <td>Keep finished jobs for</td>
+                    <td>
+                        <select id="keep_for">
+                            <option value="0">Dont Keep</option>
+                            <option value="1">1 Hour</option>
+                            <option value="3">3 Hours</option>
+                            <option value="6">6 Hours</option>
+                            <option value="24">24 Hours</option>
+                            <option value="48">2 Days</option>
+                            <option value="168">7 Days</option>
+                        </select>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Intro Data Path</td>
+                    <td>
+                        <button id="set_intro_data_path">Set Path</button> <span id="intro_data_path_label"></span>
+                    </td>
+                </tr>
+
+            </table>
 
         </div>
     </div>

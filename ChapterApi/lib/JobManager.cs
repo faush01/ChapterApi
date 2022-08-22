@@ -46,6 +46,8 @@ namespace ChapterApi
     public class DetectionJob
     {
         public DateTime added { get; } = DateTime.Now;
+        public DateTime? finished { get; set; }
+        public int keep_finished_for { set; get; } = 24;
         public JobStatus status { get; set; } = JobStatus.Waiting;
         public string name { get; set; }
         public List<IntroInfo> intro_info_list { get; set; } = new List<IntroInfo>();
@@ -188,6 +190,22 @@ namespace ChapterApi
                 lock (padlock)
                 {
                     List<string> keys = jobs.Keys.ToList();
+
+                    // remove finished jobs after set time
+                    foreach (string key in keys)
+                    {
+                        if (jobs[key].finished != null)
+                        {
+                            DateTime remote_at = jobs[key].finished.Value + TimeSpan.FromHours(jobs[key].keep_finished_for);
+                            if (remote_at < DateTime.Now)
+                            {
+                                jobs.Remove(key);
+                            }
+                        }
+                    }
+
+                    // get next waiting job
+                    keys = jobs.Keys.ToList();
                     keys.Sort();
                     foreach (string key in keys)
                     {
@@ -199,6 +217,7 @@ namespace ChapterApi
                         }
                     }
                 }
+
                 // if we have a job then work on it
                 if (job != null)
                 {
@@ -209,6 +228,7 @@ namespace ChapterApi
                     }
                     catch(Exception e)
                     {
+                        job.finished = DateTime.Now;
                         job.status = JobStatus.Error;
                         job.message = e.Message;
                         _logger.Error("Error Processing Job : " + job.name + " - " + e.Message);
@@ -268,6 +288,8 @@ namespace ChapterApi
             {
                 job.status = JobStatus.Complete;
             }
+
+            job.finished = DateTime.Now;
         }
 
     }
