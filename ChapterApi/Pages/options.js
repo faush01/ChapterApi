@@ -74,6 +74,16 @@ define(['mainTabsManager', 'dialogHelper'], function (
             intro_data_path_label.innerHTML = config.IntroDataPath;
         });
 
+        var url = "chapter_api/intro_data_stats?stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
+        ApiClient.getApiData(url).then(function (loaded_stats) {
+            console.log("Loaded Stats Result : " + JSON.stringify(loaded_stats));
+
+            let message_string = loaded_stats.SeriesCount + " series " + loaded_stats.ItemCount + " items";
+            const loaded_intro_data_label = view.querySelector("#loaded_intro_data_label");
+            loaded_intro_data_label.innerHTML = message_string;
+        });
+
     }
 
     function KeepForSelectedChanged(selector) {
@@ -87,21 +97,21 @@ define(['mainTabsManager', 'dialogHelper'], function (
         });
     }
 
-    function showDataPathPathPicker(view) {
+    function ShowDataPathPathPicker(view) {
         require(['directorybrowser'], function (directoryBrowser) {
             var picker = new directoryBrowser();
             picker.show({
                 includeFiles: false,
                 callback: function (selected) {
                     picker.close();
-                    dataPathSelectedCallBack(selected, view);
+                    DataPathSelectedCallBack(selected, view);
                 },
                 header: "Select Intro Data Path"
             });
         });
     }
 
-    function dataPathSelectedCallBack(selectedDir, view) {
+    function DataPathSelectedCallBack(selectedDir, view) {
         ApiClient.getNamedConfiguration("chapter_api").then(function (config) {
             config.IntroDataPath = selectedDir;
             console.log("New Config Settings : " + JSON.stringify(config));
@@ -109,6 +119,17 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
             var intro_data_path_label = view.querySelector('#intro_data_path_label');
             intro_data_path_label.innerHTML = selectedDir;
+        });
+    }
+
+    function ReloadIntroData(view) {
+        var url = "chapter_api/reload_intro_data?stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
+
+        ApiClient.getApiData(url).then(function (reload_result) {
+            console.log("ReloadIntroData Result : " + JSON.stringify(reload_result));
+            PopulateSettingsPage(view);
+            alert("Intro data reloaded : " + reload_result.Result);
         });
     }
 
@@ -128,7 +149,11 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
             var set_data_path = view.querySelector('#set_intro_data_path');
             set_data_path.addEventListener("click", function () {
-                showDataPathPathPicker(view);
+                ShowDataPathPathPicker(view);
+            });
+
+            view.querySelector('#reload_intro_data').addEventListener("click", function () {
+                ReloadIntroData(view);
             });
 
         });

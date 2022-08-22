@@ -115,6 +115,18 @@ namespace ChapterApi
         public int item_index { get; set; }
     }
 
+    [Route("/chapter_api/reload_intro_data", "GET", Summary = "Reloads the intro DB form the data path")]
+    [Authenticated]
+    public class ReloadIntroData : IReturn<Object>
+    {
+    }
+
+    [Route("/chapter_api/intro_data_stats", "GET", Summary = "Intro DB stats")]
+    [Authenticated]
+    public class IntroDataStats : IReturn<Object>
+    {
+    }
+
     public class DetectApiEndpoint : IService, IRequiresRequest
     {
         private readonly ISessionManager _sessionManager;
@@ -641,5 +653,61 @@ namespace ChapterApi
             return add_result;
         }
 
+        public object Get(IntroDataStats request)
+        {
+            Dictionary<string, object> intro_data_stats = new Dictionary<string, object>();
+
+            Dictionary<string, List<IntroInfo>> intro_data = _jm.GetIntroData();
+
+            int item_count = 0;
+            int series_count = 0;
+            foreach (string key in intro_data.Keys)
+            {
+                series_count++;
+                foreach (IntroInfo info in intro_data[key])
+                {
+                    item_count++;
+                }
+            }
+
+            intro_data_stats.Add("SeriesCount", series_count);
+            intro_data_stats.Add("ItemCount", item_count);
+
+            return intro_data_stats;
+        }
+
+        public object Get(ReloadIntroData request)
+        {
+            Dictionary<string, object> reload_result = new Dictionary<string, object>();
+            ChapterApiOptions config = _config.GetReportPlaybackOptions();
+
+            DirectoryInfo di = new DirectoryInfo(config.IntroDataPath);
+            if(di.Exists == false)
+            {
+                reload_result.Add("Result", "Failed");
+                reload_result.Add("Message", "Data directory does not exist");
+                return reload_result;
+            }
+
+            IntroDataManager idm = new IntroDataManager(_logger, _jsonSerializer);
+            Dictionary<string, List<IntroInfo>> intro_data = idm.LoadIntroDataFromPath(di);
+            _jm.SetIntroData(intro_data);
+
+            int item_count = 0;
+            int series_count = 0;
+            foreach (string key in intro_data.Keys)
+            {
+                series_count++;
+                foreach (IntroInfo info in intro_data[key])
+                {
+                    item_count++;
+                    _logger.Info(key + " : " + info.cp_data_md5 + " : " + info.series + " : " + info.season + " : " + info.episode);
+                }
+            }
+
+            reload_result.Add("Result", "OK");
+            reload_result.Add("Message", series_count + " series " + item_count + " items");
+            return reload_result;
+        }
     }
 }

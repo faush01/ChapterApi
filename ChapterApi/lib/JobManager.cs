@@ -98,6 +98,7 @@ namespace ChapterApi
         private readonly IItemRepository _ir;
         private readonly ILogger _logger;
         private Dictionary<string, DetectionJob> jobs;
+        private Dictionary<string, List<IntroInfo>> intro_data = new Dictionary<string, List<IntroInfo>>();
 
         private bool StopWorker = false;
 
@@ -138,6 +139,16 @@ namespace ChapterApi
                 _logger.Info("Adding Jobs");
                 jobs.Add(job.added.Ticks.ToString(), job);
             }
+        }
+
+        public Dictionary<string, List<IntroInfo>> GetIntroData()
+        {
+            return intro_data;
+        }
+
+        public void SetIntroData(Dictionary<string, List<IntroInfo>> data)
+        {
+            intro_data = data;
         }
 
         public bool CancelJob(string job_id)

@@ -14,9 +14,12 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
+using ChapterApi.lib;
+using ChapterApi.options;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Controller;
+using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Persistence;
 using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Logging;
@@ -43,11 +46,24 @@ namespace ChapterApi
             ILogManager logger,
             IApplicationPaths applicationPaths,
             IItemRepository ir,
+            IJsonSerializer jsonSerializer,
+            IServerConfigurationManager config,
             IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
         {
             _logger = logger.GetLogger("ChapterApi - Plugin");
             _jm = JobManager.GetInstance(_logger, ir);
             _logger.Info("Plugin Loaded");
+
+            ChapterApiOptions config_data = config.GetReportPlaybackOptions();
+
+            DirectoryInfo di = new DirectoryInfo(config_data.IntroDataPath);
+
+            if (di.Exists)
+            {
+                IntroDataManager idm = new IntroDataManager(_logger, jsonSerializer);
+                Dictionary<string, List<IntroInfo>> intro_data = idm.LoadIntroDataFromPath(di);
+                _jm.SetIntroData(intro_data);
+            }
         }
 
         public void Dispose()
