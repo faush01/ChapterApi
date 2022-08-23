@@ -24,5 +24,6 @@ namespace ChapterApi.options
     {
         public int KeepFinishdJobFor { get; set; } = 24;
         public string IntroDataPath { set; get; }
+        public string IntroDataExternalUrl { set; get; } = "https://themeservice.azurewebsites.net/Home/Search?download=true";
     }
 }

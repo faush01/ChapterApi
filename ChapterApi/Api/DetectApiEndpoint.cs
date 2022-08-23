@@ -36,6 +36,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -124,6 +126,12 @@ namespace ChapterApi
     [Route("/chapter_api/intro_data_stats", "GET", Summary = "Intro DB stats")]
     [Authenticated]
     public class IntroDataStats : IReturn<Object>
+    {
+    }
+
+    [Route("/chapter_api/download_intro_data", "GET", Summary = "Intro DB download")]
+    [Authenticated]
+    public class DownloadIntroData : IReturn<Object>
     {
     }
 
@@ -761,6 +769,72 @@ namespace ChapterApi
             reload_result.Add("Result", "OK");
             reload_result.Add("Message", series_count + " series " + item_count + " items");
             return reload_result;
+        }
+
+        public object Get(DownloadIntroData request)
+        {
+            Dictionary<string, object> download_result = new Dictionary<string, object>();
+            ChapterApiOptions config = _config.GetReportPlaybackOptions();
+
+            DirectoryInfo di = new DirectoryInfo(config.IntroDataPath);
+            if(!di.Exists)
+            {
+                download_result.Add("Result", "Failed");
+                download_result.Add("Message", "Local data path does not exist");
+                return download_result;
+            }
+
+            if(string.IsNullOrEmpty(config.IntroDataExternalUrl))
+            {
+                download_result.Add("Result", "Failed");
+                download_result.Add("Message", "Data Url not set");
+                return download_result;
+            }
+
+            string temp_local_path = Path.Combine(config.IntroDataPath, "theme_service_data.zip_temp");
+            FileInfo fi = new FileInfo(temp_local_path);
+            if (fi.Exists)
+            {
+                fi.Delete();
+            }
+
+            try
+            {
+                using (var client = new WebClient())
+                {
+                    client.DownloadFile(config.IntroDataExternalUrl, temp_local_path);
+                }
+            }
+            catch(Exception e)
+            {
+                download_result.Add("Result", "Failed");
+                download_result.Add("Message", e.Message);
+                return download_result;
+            }
+
+            fi = new FileInfo(temp_local_path);
+            if (!fi.Exists)
+            {
+                download_result.Add("Result", "Failed");
+                download_result.Add("Message", "File not downloaded");
+                return download_result;
+            }
+
+            string local_path = Path.Combine(config.IntroDataPath, "theme_service_data.zip");
+            FileInfo nfi = new FileInfo(local_path);
+            if (nfi.Exists)
+            {
+                nfi.Delete();
+            }
+
+            fi.MoveTo(nfi.FullName);
+
+            nfi = new FileInfo(local_path);
+            string message = "Downloaded : theme_service_data.zip (" + nfi.Length + ")";
+
+            download_result.Add("Result", "OK");
+            download_result.Add("Message", message);
+            return download_result;
         }
     }
 }

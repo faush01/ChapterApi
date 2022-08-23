@@ -72,6 +72,9 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
             var intro_data_path_label = view.querySelector('#intro_data_path_label');
             intro_data_path_label.innerHTML = config.IntroDataPath;
+
+            var intro_data_url_label = view.querySelector('#input_data_url');
+            intro_data_url_label.value = config.IntroDataExternalUrl;
         });
 
         var url = "chapter_api/intro_data_stats?stamp=" + new Date().getTime();
@@ -86,8 +89,17 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
     }
 
-    function KeepForSelectedChanged(selector) {
+    function UpdateDataUrl(text_box) {
+        ApiClient.getNamedConfiguration("chapter_api").then(function (config) {
+            console.log("Config Options : " + JSON.stringify(config));
+            let new_url = text_box.value;
+            console.log("New Data URL : " + new_url);
+            config.IntroDataExternalUrl = new_url;
+            ApiClient.updateNamedConfiguration("chapter_api", config);
+        });
+    }
 
+    function KeepForSelectedChanged(selector) {
         ApiClient.getNamedConfiguration("chapter_api").then(function (config) {
             console.log("Config Options : " + JSON.stringify(config));
             let keep_for = selector.value;
@@ -129,7 +141,18 @@ define(['mainTabsManager', 'dialogHelper'], function (
         ApiClient.getApiData(url).then(function (reload_result) {
             console.log("ReloadIntroData Result : " + JSON.stringify(reload_result));
             PopulateSettingsPage(view);
-            alert("Intro data reloaded : " + reload_result.Result);
+            alert("Intro data reloaded : " + reload_result.Result + "\n" + reload_result.Message);
+        });
+    }
+
+    function DownloadIntroData(view) {
+        var url = "chapter_api/download_intro_data?stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
+
+        ApiClient.getApiData(url).then(function (download_result) {
+            console.log("DownloadIntroData Result : " + JSON.stringify(download_result));
+            
+            alert("Intro data downloaded : " + download_result.Result + "\n" + download_result.Message);
         });
     }
 
@@ -142,18 +165,24 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
             PopulateSettingsPage(view);
 
-            const keep_for_options = view.querySelector("#keep_for");
-            keep_for_options.addEventListener("change", function () {
+            view.querySelector("#keep_for").addEventListener("change", function () {
                 KeepForSelectedChanged(this);
             });
 
-            var set_data_path = view.querySelector('#set_intro_data_path');
-            set_data_path.addEventListener("click", function () {
+            view.querySelector('#set_intro_data_path').addEventListener("click", function () {
                 ShowDataPathPathPicker(view);
             });
 
             view.querySelector('#reload_intro_data').addEventListener("click", function () {
                 ReloadIntroData(view);
+            });
+            
+            view.querySelector('#download_intro_data').addEventListener("click", function () {
+                DownloadIntroData(view);
+            });
+
+            view.querySelector('#input_data_url').addEventListener("change", function () {
+                UpdateDataUrl(this);
             });
 
         });
