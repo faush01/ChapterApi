@@ -522,6 +522,55 @@ namespace ChapterApi
             }
         }
 
+        private void LookupInternalIntroDB(int item_id, List<IntroInfo> intro_cp_info_items)
+        {
+            BaseItem base_item = _libraryManager.GetItemById(item_id);
+
+            if (base_item != null)
+            {
+                string imdb_name = MetadataProviders.Imdb.ToString();
+                string imdb_id = "";
+                if (base_item.GetType() == typeof(Episode))
+                {
+                    Episode episode = base_item as Episode;
+                    if (episode.Series.ProviderIds.ContainsKey(imdb_name))
+                    {
+                        imdb_id = episode.Series.ProviderIds[imdb_name];
+                    }
+                }
+                else if (base_item.GetType() == typeof(Season))
+                {
+                    Season season = base_item as Season;
+                    if (season.Series.ProviderIds.ContainsKey(imdb_name))
+                    {
+                        imdb_id = season.Series.ProviderIds[imdb_name];
+                    }
+                }
+                else if (base_item.GetType() == typeof(Series))
+                {
+                    Series series = base_item as Series;
+                    if (series.ProviderIds.ContainsKey(imdb_name))
+                    {
+                        imdb_id = series.ProviderIds[imdb_name];
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(imdb_id))
+                {
+                    imdb_id = imdb_id.ToLower().Trim();
+                    Dictionary<string, List<IntroInfo>> intro_data = _jm.GetIntroData();
+                    if (intro_data.ContainsKey(imdb_id))
+                    {
+                        List<IntroInfo> intros = intro_data[imdb_id];
+                        if (intros.Count > 0)
+                        {
+                            intro_cp_info_items.AddRange(intros);
+                        }
+                    }
+                }
+            }
+        }
+
         public object Post(AddDetectionJob request)
         {
             Dictionary<string, object> add_result = new Dictionary<string, object>();
@@ -531,13 +580,13 @@ namespace ChapterApi
 
             List<IntroInfo> intro_cp_info_items = new List<IntroInfo>();
 
-            if (request.ZipData != null)
+            if (!string.IsNullOrEmpty(request.ZipData)) // load data from submitted zip
             {
                 _logger.Info("ZipDataLen  : " + request.ZipData.Length);
                 //_logger.Info("ZipData     : " + request.ZipData);
                 ExtractZippedIntroData(request.ZipData, intro_cp_info_items);
             }
-            else
+            else if (!string.IsNullOrEmpty(request.IntroInfo)) // load data from submitted json
             {
                 IntroInfo info = _jsonSerializer.DeserializeFromString(request.IntroInfo, typeof(IntroInfo)) as IntroInfo;
                 if (info != null)
@@ -545,11 +594,15 @@ namespace ChapterApi
                     intro_cp_info_items.Add(info);
                 }
             }
+            else // load data from internal intro DB data table
+            {
+                LookupInternalIntroDB(request.ItemId, intro_cp_info_items);
+            }
 
             if(intro_cp_info_items.Count == 0)
             {
                 add_result.Add("Status", "Failed");
-                add_result.Add("Message", "Failed to extract intro info data from submitted file");
+                add_result.Add("Message", "No intro info data available from submitted files or Intro DB");
                 return add_result;
             }
 
@@ -578,7 +631,7 @@ namespace ChapterApi
                 if (intro_data.cp_data_md5 != cp_md5_string)
                 {
                     add_result.Add("Status", "Failed");
-                    add_result.Add("Message", "MD5 mismatch");
+                    add_result.Add("Message", "Mismatch on Intro MD5 : " + intro_data.cp_data_md5);
                     return add_result;
                 }
             }

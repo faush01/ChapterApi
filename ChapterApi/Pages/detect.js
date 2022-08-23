@@ -65,7 +65,30 @@ define(['mainTabsManager', 'dialogHelper'], function (
         });
     };
 
-    function SendJobData(view, file_content, job_type, item_id, file_ext, auto_insert) {
+    function SendJobDataLookup(view, job_type, item_id, auto_insert) {
+
+        let query_data = {
+            ItemId: item_id,
+            JobType: job_type,
+            AutoInsert: auto_insert
+        };
+
+        let url = "chapter_api/add_detection_job?stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
+
+        ApiClient.sendPostQuery(url, query_data).then(function (result) {
+            console.log("Job creation results : " + JSON.stringify(result));
+            if (result.Status === "Failed") {
+                alert("Add Job Action Failed\n" + result.Message);
+            }
+            else {
+                RefreshJobs(view);
+            }
+        });
+
+    }
+
+    function SendJobDataFile(view, file_content, job_type, item_id, file_ext, auto_insert) {
 
         let query_data;
 
@@ -143,66 +166,47 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
         const theme_info_file = view.querySelector("#theme_info_file");
         if (theme_info_file.files.length === 0) {
-            alert("No Intro Info file selected");
-            return;
+            // submit and look up data in internal into db data
+            SendJobDataLookup(view, job_type, item_id, auto_insert);
+
         }
-
-        var file_name = theme_info_file.files[0].name;
-        var file_ext = "none";
-        var index_of = file_name.lastIndexOf(".");
-        if (index_of > 0) {
-            file_ext = file_name.substring(index_of);
-            file_ext = file_ext.toLowerCase(file_ext);
-        }
-
-        if (file_ext !== ".zip" && file_ext !== ".json") {
-            alert("File type not acceptable, needs to be (zip or json)");
-            return;
-        }
-
-        const selected_file = theme_info_file.files[0];
-        //console.log(selected_file);
-
-        const reader = new FileReader();
-        if (file_ext === ".json") {
-            reader.readAsText(selected_file, "UTF-8");
-        }
-        else if (file_ext === ".zip") {
-            reader.readAsArrayBuffer(selected_file);
-        }
-
-        reader.onload = (evt) => {
-            console.log("SendJobData");
-            const job_data_string = evt.target.result;
-            /*
-            try {
-                const job_data = JSON.parse(job_data_string);
-
-                let message = "\n";
-                message += "Series : " + job_data.series + "\n";
-                message += "Extract : " + job_data.extract + " minutes\n";
-                message += "tvdb : " + job_data.tvdb + "\n";
-                message += "imdb : " + job_data.imdb + "\n";
-                message += "tmdb : " + job_data.tmdb + "\n";
-                message += "Data Length : " + job_data.cp_data_length + "\n";
-                message += "Data MD5 : " + job_data.cp_data_md5 + "\n";
-
-                if (!confirm("Job Data : \n" + message)) {
-                    return;
-                }
+        else {
+            // submit using selected file
+            var file_name = theme_info_file.files[0].name;
+            var file_ext = "none";
+            var index_of = file_name.lastIndexOf(".");
+            if (index_of > 0) {
+                file_ext = file_name.substring(index_of);
+                file_ext = file_ext.toLowerCase(file_ext);
             }
-            catch (e) {
-                alert("Error parsing Intro Info file :\n" + e);
+
+            if (file_ext !== ".zip" && file_ext !== ".json") {
+                alert("File type not acceptable, needs to be (zip or json)");
                 return;
             }
-            */
-            SendJobData(view, job_data_string, job_type, item_id, file_ext, auto_insert);
-        };
 
-        reader.onerror = (evt) => {
-            console.log("Error loading file");
-            alert("Error loading Intro Info file");
-        };
+            const selected_file = theme_info_file.files[0];
+            //console.log(selected_file);
+
+            const reader = new FileReader();
+            if (file_ext === ".json") {
+                reader.readAsText(selected_file, "UTF-8");
+            }
+            else if (file_ext === ".zip") {
+                reader.readAsArrayBuffer(selected_file);
+            }
+
+            reader.onload = (evt) => {
+                console.log("SendJobData");
+                const job_data_string = evt.target.result;
+                SendJobDataFile(view, job_data_string, job_type, item_id, file_ext, auto_insert);
+            };
+
+            reader.onerror = (evt) => {
+                console.log("Error loading file");
+                alert("Error loading Intro Info file");
+                };
+        }
     }
 
     function PopulateSeriesNames(view) {

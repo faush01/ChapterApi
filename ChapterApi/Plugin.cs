@@ -55,9 +55,7 @@ namespace ChapterApi
             _logger.Info("Plugin Loaded");
 
             ChapterApiOptions config_data = config.GetReportPlaybackOptions();
-
             DirectoryInfo di = new DirectoryInfo(config_data.IntroDataPath);
-
             if (di.Exists)
             {
                 IntroDataManager idm = new IntroDataManager(_logger, jsonSerializer);

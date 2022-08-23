@@ -73,14 +73,18 @@ namespace ChapterApi.lib
             }
         }
 
-        private IntroInfo LoadFromJsonFile(FileInfo fi)
+        private void LoadFromJsonFile(FileInfo fi, List<IntroInfo> intro_items)
         {
             string file_data = File.ReadAllText(fi.FullName, Encoding.UTF8);
             IntroInfo info = _jsonSerializer.DeserializeFromString(file_data, typeof(IntroInfo)) as IntroInfo;
-            return info;
+            if(info != null)
+            {
+                _logger.Info("Adding info from json : " + info.series + " - " + info.imdb + " - " + info.cp_data_md5);
+                intro_items.Add(info);
+            }
         }
 
-        private List<IntroInfo> LoadFromZipFile(FileInfo fi)
+        private void LoadFromZipFile(FileInfo fi, List<IntroInfo> intro_items)
         {
             List<IntroInfo> loaded_info_items = new List<IntroInfo>();
             using (ZipArchive archive = ZipFile.Open(fi.FullName, ZipArchiveMode.Read))
@@ -97,14 +101,17 @@ namespace ChapterApi.lib
                             IntroInfo info = _jsonSerializer.DeserializeFromString(entry_data, typeof(IntroInfo)) as IntroInfo;
                             if (info != null)
                             {
-                                _logger.Info("Adding info from zip : " + entry.Name + " - " + info.cp_data_md5);
+                                _logger.Info("Adding info from zip : " + info.series + " - " + info.imdb + " - " + info.cp_data_md5);
                                 loaded_info_items.Add(info);
                             }
                         }
                     }
                 }
             }
-            return loaded_info_items;
+            if(loaded_info_items.Count > 0)
+            {
+                intro_items.AddRange(loaded_info_items);
+            }
         }
 
         private List<IntroInfo> LoadIntroFileData(FileInfo intro_file)
@@ -114,19 +121,11 @@ namespace ChapterApi.lib
             string file_name = intro_file.Name.ToLower();
             if (file_name.EndsWith(".json"))
             {
-                IntroInfo intro = LoadFromJsonFile(intro_file);
-                if (intro != null)
-                {
-                    intro_list.Add(intro);
-                }
+                LoadFromJsonFile(intro_file, intro_list);
             }
             else if (file_name.EndsWith(".zip"))
             {
-                List<IntroInfo> intros = LoadFromZipFile(intro_file);
-                if (intros.Count > 0)
-                {
-                    intro_list.AddRange(intros);
-                }
+                LoadFromZipFile(intro_file, intro_list);
             }
 
             return intro_list;
