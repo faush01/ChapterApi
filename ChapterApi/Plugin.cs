@@ -54,7 +54,24 @@ namespace ChapterApi
             _jm = JobManager.GetInstance(_logger, ir);
             _logger.Info("Plugin Loaded");
 
+            LoadIntroData(config, applicationPaths, jsonSerializer);
+        }
+
+        private void LoadIntroData(IServerConfigurationManager config, IApplicationPaths applicationPaths, IJsonSerializer jsonSerializer)
+        {
             ChapterApiOptions config_data = config.GetReportPlaybackOptions();
+            if (string.IsNullOrEmpty(config_data.IntroDataPath))
+            {
+                string new_data_path = Path.Combine(applicationPaths.TempDirectory, "ChapterApiIntroData");
+                DirectoryInfo ndp = new DirectoryInfo(new_data_path);
+                if (!ndp.Exists)
+                {
+                    ndp.Create();
+                }
+                config_data.IntroDataPath = ndp.FullName;
+                config.SaveConfiguration("chapter_api", config_data);
+            }
+
             DirectoryInfo di = new DirectoryInfo(config_data.IntroDataPath);
             if (di.Exists)
             {

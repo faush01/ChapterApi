@@ -159,7 +159,7 @@ namespace ChapterApi.lib
                         }
                         else
                         {
-                            _logger.Info("Dropping duplicate item");
+                            _logger.Info("Dropping duplicate item : " + intro.cp_data_md5);
                         }
                     }
                     else
