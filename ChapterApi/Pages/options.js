@@ -70,11 +70,15 @@ define(['mainTabsManager', 'dialogHelper'], function (
             const keep_for_options = view.querySelector("#keep_for");
             keep_for_options.value = config.KeepFinishdJobFor;
 
-            var intro_data_path_label = view.querySelector('#intro_data_path_label');
+            const intro_data_path_label = view.querySelector('#intro_data_path_label');
             intro_data_path_label.innerHTML = config.IntroDataPath;
 
-            var intro_data_url_label = view.querySelector('#input_data_url');
+            const intro_data_url_label = view.querySelector('#input_data_url');
             intro_data_url_label.value = config.IntroDataExternalUrl;
+
+            const process_added_items = view.querySelector('#process_added_items');
+            process_added_items.checked = config.ProcessAddedItems;
+            
         });
 
         var url = "chapter_api/intro_data_stats?stamp=" + new Date().getTime();
@@ -156,6 +160,16 @@ define(['mainTabsManager', 'dialogHelper'], function (
         });
     }
 
+    function ProcessAddedChanged(checkbox) {
+        ApiClient.getNamedConfiguration("chapter_api").then(function (config) {
+            console.log("Config Options : " + JSON.stringify(config));
+
+            config.ProcessAddedItems = checkbox.checked;
+
+            ApiClient.updateNamedConfiguration("chapter_api", config);
+        });
+    }
+
     return function (view, params) {
 
         // init code here
@@ -183,6 +197,10 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
             view.querySelector('#input_data_url').addEventListener("change", function () {
                 UpdateDataUrl(this);
+            });
+
+            view.querySelector('#process_added_items').addEventListener("change", function () {
+                ProcessAddedChanged(this);
             });
 
         });

@@ -62,7 +62,7 @@ namespace ChapterApi
             ChapterApiOptions config_data = config.GetReportPlaybackOptions();
             if (string.IsNullOrEmpty(config_data.IntroDataPath))
             {
-                string new_data_path = Path.Combine(applicationPaths.TempDirectory, "ChapterApiIntroData");
+                string new_data_path = Path.Combine(applicationPaths.DataPath, "ChapterApiIntroData");
                 DirectoryInfo ndp = new DirectoryInfo(new_data_path);
                 if (!ndp.Exists)
                 {
