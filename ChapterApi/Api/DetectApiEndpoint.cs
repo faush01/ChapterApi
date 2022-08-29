@@ -289,6 +289,7 @@ namespace ChapterApi
             List<Dictionary<string, object>> episode_list = new List<Dictionary<string, object>>();
 
             InternalItemsQuery query = new InternalItemsQuery();
+            query.IsVirtualItem = false;
             query.IncludeItemTypes = new string[] { "Episode" };
             query.ParentIds = new long[] { request.id };
             BaseItem[] results = _libraryManager.GetItemList(query);
@@ -613,6 +614,7 @@ namespace ChapterApi
             {
                 // get item list
                 InternalItemsQuery query = new InternalItemsQuery();
+                query.IsVirtualItem = false;
                 query.Recursive = true;
                 query.IncludeItemTypes = new string[] { "Episode" };
                 query.ParentIds = new long[] { request.ItemId };

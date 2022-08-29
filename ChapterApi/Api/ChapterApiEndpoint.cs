@@ -499,6 +499,7 @@ namespace ChapterApi
             List<Dictionary<string, object>> episode_list = new List<Dictionary<string, object>>();
 
             InternalItemsQuery query = new InternalItemsQuery();
+            query.IsVirtualItem = false;
             query.ParentIds = new long[] { season_item.InternalId };
             query.IncludeItemTypes = new string[] { "Episode" };
             BaseItem[] results = _libraryManager.GetItemList(query);
