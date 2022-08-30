@@ -338,39 +338,81 @@ define(['mainTabsManager', 'dialogHelper'], function (
             dlg.classList.add('ui-body-a');
             dlg.classList.add('background-theme-a');
             dlg.classList.add('formDialog');
-            dlg.style.maxWidth = '50%';
-            dlg.style.maxHeight = '65%';
+
+            dlg.style.maxHeight = '550px';
+            dlg.style.height = '550px';
+            dlg.style.maxWidth = '750px';
+            dlg.style.width = '750px';
 
             var html = '';
             html += '<div class="formDialogHeader">';
             html += '<button is="paper-icon-button-light" class="btnCancel autoSize" tabindex="-1">';
             html += '<i class="md-icon">&#xE5C4;</i>';
             html += '</button>';
-            html += '<h3 class="formDialogHeaderTitle" style="padding-left:20px;"> Job Item: ' + job_item_info.Name + '</h3>';
+            html += '<span class="formDialogHeaderTitle" style="padding-left:20px; font-weight: bold; font-size: 120%;"> Job Item: ' + job_item_info.Name + '</span>';
             html += '</div>';
 
-            html += '<div class="formDialogContent" style="margin:2em;">';
-            html += '<div class="dialogContentInner" style="max-width: 100%; justify-content: center; align-content:center; display: flex;">';
+            html += '<div class="formDialogContent" style="margin:10px; height: 500px;">';
+            html += '<div class="dialogContentInner" style="width: 100%; overflow-y: scroll; height:485px;">';
 
-            //html += '<canvas id="chart_canvas" width="500" height="150" style="border:1px solid #d3d3d3;">no canvas</canvas>';
-
+            html += '<h3>Best Result</h3>';
             html += '<table style="" padding="5px">';
 
-            html += '<tr><td>Status:</td><td>' + job_item_info.Status + '</td></tr>';
+            html += '<tr><td style="text-align: right;">Status:</td><td>' + job_item_info.Status + '</td></tr>';
 
-            html += '<tr><td>Extract Time:</td><td>' + job_item_info.ExtractTime + '</td></tr>';
-            html += '<tr><td>Detect Time:</td><td>' + job_item_info.DetectTime + '</td></tr>';
-            html += '<tr><td>Total Time:</td><td>' + job_item_info.TotalTime + '</td></tr>';
+            html += '<tr><td style="text-align: right;">Extract Time:</td><td>' + job_item_info.ExtractTime + '</td></tr>';
+            html += '<tr><td style="text-align: right;">Detect Time:</td><td>' + job_item_info.DetectTime + '</td></tr>';
+            html += '<tr><td style="text-align: right;">Total Time:</td><td>' + job_item_info.TotalTime + '</td></tr>';
 
-            html += '<tr><td>Found Intro:</td><td>' + job_item_info.FoundIntro + '</td></tr>';            
-            html += '<tr><td>Intro MD5:</td><td>' + job_item_info.IntroMD5 + '</td></tr>';
-            html += '<tr><td>Distance Sum:</td><td>' + job_item_info.DistanceSum + '</td></tr>';
-            html += '<tr><td>Distance Max:</td><td>' + job_item_info.DistanceMax + '</td></tr>';
-            html += '<tr><td>Distance Avg:</td><td>' + job_item_info.DistanceAvg + '</td></tr>';
-            html += '<tr><td>Distance Min:</td><td>' + job_item_info.DistanceMin + '</td></tr>';
-            html += '<tr><td>Distance Threshold:</td><td>' + job_item_info.DistanceThreshold + '</td></tr>';
-            html += '<tr><td>Min Offset:</td><td>' + job_item_info.MinOffset + '</td></tr>';
+            html += '<tr><td style="text-align: right;">Found Intro:</td><td>' + job_item_info.FoundIntro + '</td></tr>';            
+            html += '<tr><td style="text-align: right;">Intro MD5:</td><td>' + job_item_info.IntroMD5 + '</td></tr>';
+            html += '<tr><td style="text-align: right;">Distance Sum:</td><td>' + job_item_info.DistanceSum + '</td></tr>';
+            html += '<tr><td style="text-align: right;">Distance Max:</td><td>' + job_item_info.DistanceMax + '</td></tr>';
+            html += '<tr><td style="text-align: right;">Distance Avg:</td><td>' + job_item_info.DistanceAvg + '</td></tr>';
+            html += '<tr><td style="text-align: right;">Distance Min:</td><td>' + job_item_info.DistanceMin + '</td></tr>';
+            html += '<tr><td style="text-align: right;">Distance Threshold:</td><td>' + job_item_info.DistanceThreshold + '</td></tr>';
+            html += '<tr><td style="text-align: right;">Min Offset:</td><td>' + job_item_info.MinOffset + '</td></tr>';
 
+            html += '</table>';
+
+            //html += '<hr/>';
+
+            //html += '<canvas id="chart_canvas" width="720" height="150" style="border:1px solid #d3d3d3;">no canvas</canvas>';
+
+            html += '<hr/>';
+
+            html += '<h3>All Results</h3>';
+            html += '<table style="width: 100%;" padding="5px">';
+            html += '<thead>';
+            html += '<tr>';
+            html += '<th style="text-align: left;">Found</th>';
+            html += '<th style="text-align: left;">MD5</th>';
+            html += '<th style="text-align: left;">Sum</th>';
+            html += '<th style="text-align: left;">Max</th>';
+            html += '<th style="text-align: left;">Avg</th>';
+            html += '<th style="text-align: left;">Min</th>';
+            html += '<th style="text-align: left;">Threshold</th>';
+            html += '<th style="text-align: left;">Offset</th>';
+            html += '</tr>';
+            html += '</thead>';
+
+            html += '<tbody>';
+            for (const item_result of job_item_info.Results) {
+                html += '<tr>';
+
+                html += '<td>' + item_result.FoundIntro + '</td>';
+                html += '<td>' + item_result.IntroMD5 + '</td>';
+                html += '<td>' + item_result.DistanceSum + '</td>';
+                html += '<td>' + item_result.DistanceMax + '</td>';
+                html += '<td>' + item_result.DistanceAvg + '</td>';
+                html += '<td>' + item_result.DistanceMin + '</td>';
+                html += '<td>' + item_result.DistanceThreshold + '</td>';
+                html += '<td>' + item_result.MinOffset + '</td>';
+
+                html += '</tr>';
+            }
+
+            html += '</tbody>';
             html += '</table>';
 
             html += '</div>';

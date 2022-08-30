@@ -623,7 +623,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
                     if (intro_start && intro_end) {
                         var intro_duration = (intro_end.TimeTicks - intro_start.TimeTicks) / ticks_per_sec;
-                        if (intro_duration > 10 && intro_duration < 300) {
+                        if (intro_duration > 2 && intro_duration < 300) {
                             var link = document.createElement("a");
                             link.style.color = "inherit";
                             var export_link = "chapter_api/extract_theme?id=" + episode.Id;

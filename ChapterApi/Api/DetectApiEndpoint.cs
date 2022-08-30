@@ -237,6 +237,22 @@ namespace ChapterApi
                     job_item_info.Add("SearchDistances", "");
                 }
 
+                List<Dictionary<string, object>> detection_results = new List<Dictionary<string, object>>();
+                foreach (DetectionResult result in job_item.detection_result_list)
+                {
+                    Dictionary<string, object> result_info = new Dictionary<string, object>();
+                    result_info.Add("FoundIntro", result.found_intro);
+                    result_info.Add("IntroMD5", result.intro_info.cp_data_md5);
+                    result_info.Add("DistanceSum", result.sum_distance);
+                    result_info.Add("DistanceMax", result.max_distance);
+                    result_info.Add("DistanceAvg", result.avg_distance);
+                    result_info.Add("DistanceMin", result.min_distance);
+                    result_info.Add("DistanceThreshold", result.dist_threshold);
+                    result_info.Add("MinOffset", result.min_offset);
+                    detection_results.Add(result_info);
+                }
+                job_item_info.Add("Results", detection_results);
+
             }
             else
             {

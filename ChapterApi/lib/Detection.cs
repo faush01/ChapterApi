@@ -186,7 +186,7 @@ namespace ChapterApi
             {
                 result.found_intro = false;
                 _logger.Info("Theme not found!");
-                return null;
+                return result;
             }
             result.found_intro = true;
 
