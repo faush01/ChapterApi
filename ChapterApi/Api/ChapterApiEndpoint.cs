@@ -430,31 +430,27 @@ namespace ChapterApi
                     info.Add("Series", e.SeriesName);
                     info.Add("Season", e.Season.Name);
 
-                    string index_num = "";
+                    string sort_index = "000000";
+                    string index_num = "00";
                     if (e.IndexNumber != null)
                     {
+                        sort_index = e.IndexNumber.Value.ToString("D6");
                         index_num = e.IndexNumber.Value.ToString("D2");
                     }
-                    else
-                    {
-                        index_num = "00";
-                    }
                     info["Name"] = index_num + " - " + item.Name;
-                    info["SortName"] = index_num + " - " + item.SortName;
+                    info["SortName"] = sort_index + " - " + item.SortName;
                 }
                 else if (item.GetType() == typeof(Season))
                 {
-                    string index_num = "";
+                    string sort_index = "000000";
+                    string index_num = "00";
                     if (item.IndexNumber != null)
                     {
+                        sort_index = item.IndexNumber.Value.ToString("D6");
                         index_num = item.IndexNumber.Value.ToString("D2");
                     }
-                    else
-                    {
-                        index_num = "00";
-                    }
                     info["Name"] = index_num + " - " + item.Name;
-                    info["SortName"] = index_num + " - " + item.SortName;   
+                    info["SortName"] = sort_index + " - " + item.SortName;   
                 }
 
                 items.Add(info);
@@ -512,8 +508,10 @@ namespace ChapterApi
                 episode_info.Add("Id", episode.InternalId);
                 episode_info.Add("ItemType", episode.GetType().Name);
 
-                string ep_no = (episode.IndexNumber ?? 0).ToString("D2");
+                int ep_index = episode.IndexNumber ?? 0;
+                string ep_no = ep_index.ToString("D2");
                 episode_info.Add("Name", ep_no + " - " + episode.Name);
+                episode_info.Add("Index", ep_index);
 
                 long? intro_start = null;
                 long? intro_end = null;
@@ -555,10 +553,12 @@ namespace ChapterApi
 
             episode_list.Sort(delegate (Dictionary<string, object> c1, Dictionary<string, object> c2)
             {
-                string c1_str = c1["Name"] as string;
-                string c2_str = c2["Name"] as string;
-                int cmp_restlt = string.Compare(c1_str, c2_str, comparisonType: StringComparison.OrdinalIgnoreCase);
-                return cmp_restlt;
+                int? c1_index = c1["Index"] as int?;
+                int? c2_index = c2["Index"] as int?;
+                if(c1_index == null && c2_index == null) return 0;
+                if(c1_index == null && c2_index != null) return -1;
+                if(c1_index != null && c2_index == null) return 1;
+                return c1_index.Value.CompareTo(c2_index.Value);
             });
 
             return episode_list;
