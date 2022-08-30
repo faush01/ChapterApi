@@ -10,7 +10,6 @@
                     <td>
                         <table>
                             <tr>
-                                <td>Items</td>
                                 <td>
                                     <select id="series_list"></select>
                                     <select id="season_list">
@@ -22,15 +21,15 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td>Auto Insert</td>
                                 <td><input type="checkbox" id="chapters_auto_insert" /> Automatically insert detected intro chapters</td>
                             </tr>
                             <tr>
-                                <td>Into Info</td>
-                                <td><input type="file" id="theme_info_file" /></td>
+                                <td>
+                                    Into Info Data (Optional)<br />
+                                    Leave empty to use the internal Intro data DB <strong>OR</strong> select a intro info json file <input type="file" id="theme_info_file" />
+                                </td>
                             </tr>
                             <tr>
-                                <td></td>
                                 <td><button id="run_detection">Add Job</button></td>
                             </tr>
                         </table>
