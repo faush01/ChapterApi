@@ -665,7 +665,7 @@ namespace ChapterApi
                 actions.Add("Auto Adding Chapters at intervals: " + request.auto_interval);
 
                 TimeSpan interval = new TimeSpan(0, request.auto_interval, 0);
-                TimeSpan auto_chapter = new TimeSpan(interval.Ticks);
+                TimeSpan auto_chapter = new TimeSpan(0, 0, 0);
                 int chapter_index = 1;
                 string chapter_name = request.name;
                 while(auto_chapter.Ticks < item.RunTimeTicks)
