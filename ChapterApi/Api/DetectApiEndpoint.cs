@@ -251,6 +251,12 @@ namespace ChapterApi
                     result_info.Add("MinOffset", result.min_offset);
                     detection_results.Add(result_info);
                 }
+                detection_results.Sort(delegate (Dictionary<string, object> c1, Dictionary<string, object> c2)
+                {
+                    uint c1_index = (uint)c1["DistanceMin"];
+                    uint c2_index = (uint)c2["DistanceMin"];
+                    return c1_index.CompareTo(c2_index);
+                });
                 job_item_info.Add("Results", detection_results);
 
             }

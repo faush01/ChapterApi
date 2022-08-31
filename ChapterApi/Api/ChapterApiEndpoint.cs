@@ -553,12 +553,9 @@ namespace ChapterApi
 
             episode_list.Sort(delegate (Dictionary<string, object> c1, Dictionary<string, object> c2)
             {
-                int? c1_index = c1["Index"] as int?;
-                int? c2_index = c2["Index"] as int?;
-                if(c1_index == null && c2_index == null) return 0;
-                if(c1_index == null && c2_index != null) return -1;
-                if(c1_index != null && c2_index == null) return 1;
-                return c1_index.Value.CompareTo(c2_index.Value);
+                int c1_index = (int)c1["Index"];
+                int c2_index = (int)c2["Index"];
+                return c1_index.CompareTo(c2_index);
             });
 
             return episode_list;
