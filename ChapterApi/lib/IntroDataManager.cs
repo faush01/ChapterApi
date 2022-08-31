@@ -16,6 +16,7 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
@@ -31,11 +32,16 @@ namespace ChapterApi.lib
     {
         private readonly ILogger _logger;
         private readonly IJsonSerializer _jsonSerializer;
+        private readonly ILibraryManager _libraryManager;
 
-        public IntroDataManager(ILogger logger, IJsonSerializer jsonSerializer)
+        public IntroDataManager(
+            ILogger logger, 
+            IJsonSerializer jsonSerializer,
+            ILibraryManager libraryManager)
         {
             _logger = logger;
             _jsonSerializer = jsonSerializer;
+            _libraryManager = libraryManager;
         }
 
         public void LookupInternalIntroDB(BaseItem base_item, List<IntroInfo> intro_cp_info_items, JobManager jm)
@@ -85,14 +91,42 @@ namespace ChapterApi.lib
             }
         }
 
+        private HashSet<string> GetSeriesProviderIDs()
+        {
+            HashSet<string> ids = new HashSet<string>();
+
+            InternalItemsQuery query = new InternalItemsQuery();
+            query.IncludeItemTypes = new string[] { "Series" };
+            query.Recursive = true;
+
+            string imdb_name = MetadataProviders.Imdb.ToString();
+
+            BaseItem[] results = _libraryManager.GetItemList(query);
+            foreach (BaseItem base_item in results)
+            {
+                Series series = base_item as Series;
+                if (series.ProviderIds.ContainsKey(imdb_name))
+                {
+                    string imdb_id = series.ProviderIds[imdb_name];
+                    if(!string.IsNullOrEmpty(imdb_id))
+                    {
+                        imdb_id = imdb_id.ToLower();
+                        ids.Add(imdb_id);
+                    }
+                }
+            }
+
+            return ids;
+        }
+
         public Dictionary<string, List<IntroInfo>> LoadIntroDataFromPath(DirectoryInfo data_path)
         {
-            List<FileInfo> fil = new List<FileInfo>();
-            WalkDir(data_path, fil);
+            List<FileInfo> file_list = new List<FileInfo>();
+            WalkDir(data_path, file_list);
 
             // process the list of files
             List<IntroInfo> intro_data = new List<IntroInfo>();
-            foreach (FileInfo fi in fil)
+            foreach (FileInfo fi in file_list)
             {
                 List<IntroInfo> loaded_intro_list = LoadIntroFileData(fi);
                 if (loaded_intro_list.Count > 0)
@@ -100,7 +134,7 @@ namespace ChapterApi.lib
                     intro_data.AddRange(loaded_intro_list);
                 }
             }
-
+            
             Dictionary<string, List<IntroInfo>> intro_db = BuildIntroDB(intro_data);
             return intro_db;
         }
@@ -183,13 +217,20 @@ namespace ChapterApi.lib
 
         Dictionary<string, List<IntroInfo>> BuildIntroDB(List<IntroInfo> items)
         {
+            HashSet<string> provider_ids = GetSeriesProviderIDs();
+            foreach(string provider_id in provider_ids)
+            {
+                _logger.Info("Provide ID Loaded : " + provider_id);
+            }
+
             // build the intro DB to use
             Dictionary<string, List<IntroInfo>> intro_db = new Dictionary<string, List<IntroInfo>>();
             foreach (IntroInfo intro in items)
             {
                 string imdb = intro.imdb ?? "";
                 imdb = imdb.Trim();
-                if (!string.IsNullOrEmpty(imdb))
+                imdb = imdb.ToLower();
+                if (!string.IsNullOrEmpty(imdb) && provider_ids.Contains(imdb))
                 {
                     if (intro_db.ContainsKey(imdb))
                     {

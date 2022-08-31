@@ -20,6 +20,7 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Persistence;
 using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Logging;
@@ -41,6 +42,7 @@ namespace ChapterApi
 
         private readonly ILogger _logger;
         private readonly JobManager _jm;
+        private readonly ILibraryManager _libraryManager;
 
         public Plugin(
             ILogManager logger,
@@ -48,9 +50,11 @@ namespace ChapterApi
             IItemRepository ir,
             IJsonSerializer jsonSerializer,
             IServerConfigurationManager config,
-            IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
+            IXmlSerializer xmlSerializer,
+            ILibraryManager libraryManager) : base(applicationPaths, xmlSerializer)
         {
             _logger = logger.GetLogger("ChapterApi - Plugin");
+            _libraryManager = libraryManager;
             _jm = JobManager.GetInstance(_logger, ir);
             _logger.Info("Plugin Loaded");
 
@@ -75,7 +79,7 @@ namespace ChapterApi
             DirectoryInfo di = new DirectoryInfo(config_data.IntroDataPath);
             if (di.Exists)
             {
-                IntroDataManager idm = new IntroDataManager(_logger, jsonSerializer);
+                IntroDataManager idm = new IntroDataManager(_logger, jsonSerializer, _libraryManager);
                 Dictionary<string, List<IntroInfo>> intro_data = idm.LoadIntroDataFromPath(di);
                 _jm.SetIntroData(intro_data);
             }

@@ -579,7 +579,7 @@ namespace ChapterApi
             else // load data from internal intro DB data table
             {
                 BaseItem base_item = _libraryManager.GetItemById(request.ItemId);
-                IntroDataManager idm = new IntroDataManager(_logger, _jsonSerializer);
+                IntroDataManager idm = new IntroDataManager(_logger, _jsonSerializer, _libraryManager);
                 idm.LookupInternalIntroDB(base_item, intro_cp_info_items, _jm);
             }
 
@@ -727,7 +727,7 @@ namespace ChapterApi
                 return reload_result;
             }
 
-            IntroDataManager idm = new IntroDataManager(_logger, _jsonSerializer);
+            IntroDataManager idm = new IntroDataManager(_logger, _jsonSerializer, _libraryManager);
             Dictionary<string, List<IntroInfo>> intro_data = idm.LoadIntroDataFromPath(di);
             _jm.SetIntroData(intro_data);
 
