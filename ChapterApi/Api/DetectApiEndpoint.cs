@@ -314,13 +314,20 @@ namespace ChapterApi
             query.IsVirtualItem = false;
             query.IncludeItemTypes = new string[] { "Episode" };
             query.ParentIds = new long[] { request.id };
+
+            (string, SortOrder)[] ord = new (string, SortOrder)[1];
+            ord[0] = ("IndexNumber", SortOrder.Ascending);
+            query.OrderBy = ord;
+
             BaseItem[] results = _libraryManager.GetItemList(query);
 
             foreach (BaseItem item in results)
             {
                 Dictionary<string, object> episode = new Dictionary<string, object>();
 
-                episode.Add("Name", item.Name);
+                int index = item.IndexNumber ?? 0;
+                string name = index.ToString("D2") + " - " + item.Name;
+                episode.Add("Name", name);
                 episode.Add("Id", item.InternalId);
 
                 episode_list.Add(episode);
@@ -337,7 +344,7 @@ namespace ChapterApi
             query.IncludeItemTypes = new string[] { "Season" };
 
             (string, SortOrder)[] ord = new (string, SortOrder)[1];
-            ord[0] = ("SortName", SortOrder.Ascending);
+            ord[0] = ("IndexNumber", SortOrder.Ascending);
             query.OrderBy = ord;
 
             query.ParentIds = new long[] { request.id };
@@ -348,7 +355,9 @@ namespace ChapterApi
             {
                 Dictionary<string, object> season = new Dictionary<string, object>();
 
-                season.Add("Name", item.Name);
+                int index = item.IndexNumber ?? 0;
+                string name = index.ToString("D2") + " - " + item.Name;
+                season.Add("Name", name);
                 season.Add("Id", item.InternalId);
 
                 season_list.Add(season);
@@ -543,7 +552,7 @@ namespace ChapterApi
                                 IntroInfo info = _jsonSerializer.DeserializeFromString(entry_data, typeof(IntroInfo)) as IntroInfo;
                                 if (info != null)
                                 {
-                                    _logger.Info("Adding info from zip : " + entry.Name);
+                                    //_logger.Info("Adding info from zip : " + entry.Name);
                                     intro_items.Add(info);
                                 }
                             }

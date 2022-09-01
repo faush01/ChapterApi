@@ -163,7 +163,7 @@ namespace ChapterApi.lib
             IntroInfo info = _jsonSerializer.DeserializeFromString(file_data, typeof(IntroInfo)) as IntroInfo;
             if(info != null)
             {
-                _logger.Info("Adding info from json : " + info.series + " - " + info.imdb + " - " + info.cp_data_md5);
+                //_logger.Info("Adding info from json : " + info.series + " - " + info.imdb + " - " + info.cp_data_md5);
                 intro_items.Add(info);
             }
         }
@@ -185,7 +185,7 @@ namespace ChapterApi.lib
                             IntroInfo info = _jsonSerializer.DeserializeFromString(entry_data, typeof(IntroInfo)) as IntroInfo;
                             if (info != null)
                             {
-                                _logger.Info("Adding info from zip : " + info.series + " - " + info.imdb + " - " + info.cp_data_md5);
+                                //_logger.Info("Adding info from zip : " + info.series + " - " + info.imdb + " - " + info.cp_data_md5);
                                 loaded_info_items.Add(info);
                             }
                         }
