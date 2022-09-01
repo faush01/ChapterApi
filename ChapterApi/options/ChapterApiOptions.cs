@@ -22,7 +22,7 @@ namespace ChapterApi.options
 {
     public class ChapterApiOptions
     {
-        public bool ProcessAddedItems { get; set; } = true;
+        public bool ProcessAddedItems { get; set; } = false;
         public int KeepFinishdJobFor { get; set; } = 24;
         public string IntroDataPath { set; get; }
         public string IntroDataExternalUrl { set; get; } = "https://themeservice.azurewebsites.net/Home/Search?download=true";

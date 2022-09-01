@@ -51,12 +51,15 @@ namespace ChapterApi.Tasks
 
         IEnumerable<TaskTriggerInfo> IScheduledTask.GetDefaultTriggers()
         {
+            /*
             var trigger = new TaskTriggerInfo
             {
                 Type = TaskTriggerInfo.TriggerDaily,
                 TimeOfDayTicks = TimeSpan.FromHours(3.5).Ticks //3:30am
             };
             return new[] { trigger };
+            */
+            return new TaskTriggerInfo[0];
         }
 
         async Task IScheduledTask.Execute(CancellationToken cancellationToken, IProgress<double> progress)
