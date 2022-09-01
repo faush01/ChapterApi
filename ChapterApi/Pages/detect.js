@@ -355,7 +355,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
             html += '<div class="formDialogContent" style="margin:10px; height: 500px;">';
             html += '<div class="dialogContentInner" style="width: 100%; overflow-y: scroll; height:485px;">';
 
-            html += '<h3>Best Result</h3>';
+            html += '<h4>Item Result</h4>';
             html += '<table style="" padding="5px">';
 
             html += '<tr><td style="text-align: right;">Status:</td><td>' + job_item_info.Status + '</td></tr>';
@@ -364,24 +364,21 @@ define(['mainTabsManager', 'dialogHelper'], function (
             html += '<tr><td style="text-align: right;">Detect Time:</td><td>' + job_item_info.DetectTime + '</td></tr>';
             html += '<tr><td style="text-align: right;">Total Time:</td><td>' + job_item_info.TotalTime + '</td></tr>';
 
-            html += '<tr><td style="text-align: right;">Found Intro:</td><td>' + job_item_info.FoundIntro + '</td></tr>';            
-            html += '<tr><td style="text-align: right;">Intro MD5:</td><td>' + job_item_info.IntroMD5 + '</td></tr>';
-            html += '<tr><td style="text-align: right;">Distance Sum:</td><td>' + job_item_info.DistanceSum + '</td></tr>';
-            html += '<tr><td style="text-align: right;">Distance Max:</td><td>' + job_item_info.DistanceMax + '</td></tr>';
-            html += '<tr><td style="text-align: right;">Distance Avg:</td><td>' + job_item_info.DistanceAvg + '</td></tr>';
-            html += '<tr><td style="text-align: right;">Distance Min:</td><td>' + job_item_info.DistanceMin + '</td></tr>';
-            html += '<tr><td style="text-align: right;">Distance Threshold:</td><td>' + job_item_info.DistanceThreshold + '</td></tr>';
-            html += '<tr><td style="text-align: right;">Min Offset:</td><td>' + job_item_info.MinOffset + '</td></tr>';
+            html += '<tr><td style="text-align: right;">Found Intro:</td><td>' + job_item_info.FoundIntro + '</td></tr>';
+            
+            //html += '<tr><td style="text-align: right;">Intro MD5:</td><td>' + job_item_info.IntroMD5 + '</td></tr>';
+            //html += '<tr><td style="text-align: right;">Distance Sum:</td><td>' + job_item_info.DistanceSum + '</td></tr>';
+            //html += '<tr><td style="text-align: right;">Distance Max:</td><td>' + job_item_info.DistanceMax + '</td></tr>';
+            //html += '<tr><td style="text-align: right;">Distance Avg:</td><td>' + job_item_info.DistanceAvg + '</td></tr>';
+            //html += '<tr><td style="text-align: right;">Distance Min:</td><td>' + job_item_info.DistanceMin + '</td></tr>';
+            //html += '<tr><td style="text-align: right;">Distance Threshold:</td><td>' + job_item_info.DistanceThreshold + '</td></tr>';
+            //html += '<tr><td style="text-align: right;">Min Offset:</td><td>' + job_item_info.MinOffset + '</td></tr>';
 
             html += '</table>';
 
-            //html += '<hr/>';
-
-            //html += '<canvas id="chart_canvas" width="720" height="150" style="border:1px solid #d3d3d3;">no canvas</canvas>';
-
             html += '<hr/>';
 
-            html += '<h3>All Results</h3>';
+            html += '<h4>All Match Results</h4>';
             html += '<table style="width: 100%;" padding="5px">';
             html += '<thead>';
             html += '<tr>';
@@ -415,6 +412,10 @@ define(['mainTabsManager', 'dialogHelper'], function (
             html += '</tbody>';
             html += '</table>';
 
+            html += '<hr/>';
+            html += '<h4>Best Match Distances</h4>';
+            html += '<canvas id="chart_canvas" width="700" height="150" style="border:1px solid #d3d3d3;">no canvas</canvas>';
+
             html += '</div>';
             html += '</div>';
 
@@ -426,20 +427,53 @@ define(['mainTabsManager', 'dialogHelper'], function (
                 });
             });
 
-            /*
-            var cc = dlg.querySelector("#chart_canvas");
-            var ctx = cc.getContext("2d");
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(300, 150);
-            ctx.stroke();
-            */
-
+            if (job_item_info.BestMatch && job_item_info.BestMatch.Distances.length > 0) {
+                var cc = dlg.querySelector("#chart_canvas");
+                DrawDistanceChart(cc, job_item_info.BestMatch);
+            }
+            
             dialogHelper.open(dlg);
 
         });
     }
 
+    function DrawDistanceChart(chart_canvas, match_info) {
+
+        let distances = match_info.Distances;
+        let max_dist = match_info.MaxDistance;
+        console.log("DrawDistanceChart : " + distances.length);
+
+        var ctx = chart_canvas.getContext("2d");
+
+        // canval size 700 x 150
+        let x_mult = 700 / distances.length;
+        let y_mult = 100 / max_dist;
+
+        console.log("DrawDistanceChart x_mult : " + x_mult + " y_mult : " + y_mult);
+
+        // draw threshold line
+        ctx.beginPath();
+        ctx.strokeStyle = 'grey';
+        let threshold_y = 150 - (match_info.Threshold * y_mult);
+        ctx.moveTo(0, threshold_y);
+        ctx.lineTo(720, threshold_y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = 'green';
+        let index = 0;
+        for (index = 0; index < distances.length; index++) {
+            let x = index * x_mult;
+            let y = distances[index] * y_mult;
+            y = 150 - y; 
+
+            if (index === 0) {
+                ctx.moveTo(0, y);
+            }
+            ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    }
 
     function PopulateJobInfo(view, job_id) {
         console.log("Populate Job Info : " + job_id);

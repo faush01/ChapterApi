@@ -198,7 +198,7 @@ namespace ChapterApi
             {
                 DetectionJob job = jobs[request.id];
 
-                if(request.item_index < 0 || request.item_index >= job.items.Count)
+                if (request.item_index < 0 || request.item_index >= job.items.Count)
                 {
                     job_item_info.Add("Result", "Job Item Index not valid");
                     return job_item_info;
@@ -222,7 +222,6 @@ namespace ChapterApi
                     job_item_info.Add("DistanceMin", job_item.detection_result.min_distance);
                     job_item_info.Add("DistanceThreshold", job_item.detection_result.dist_threshold);
                     job_item_info.Add("MinOffset", job_item.detection_result.min_offset);
-                    job_item_info.Add("SearchDistances", job_item.detection_result.distances);
                 }
                 else
                 {
@@ -234,7 +233,6 @@ namespace ChapterApi
                     job_item_info.Add("DistanceMin", "");
                     job_item_info.Add("DistanceThreshold", "");
                     job_item_info.Add("MinOffset", "");
-                    job_item_info.Add("SearchDistances", "");
                 }
 
                 List<Dictionary<string, object>> detection_results = new List<Dictionary<string, object>>();
@@ -258,6 +256,26 @@ namespace ChapterApi
                     return c1_index.CompareTo(c2_index);
                 });
                 job_item_info.Add("Results", detection_results);
+
+                // add closest match distance numbers
+                DetectionResult closest_match = null;
+                foreach (DetectionResult result in job_item.detection_result_list)
+                {
+                    if(closest_match == null || closest_match.min_distance > result.min_distance)
+                    {
+                        closest_match = result;
+                    }
+                }
+                if(closest_match != null)
+                {
+                    Dictionary<string, object> best_match = new Dictionary<string, object>();
+                    best_match.Add("Distances", closest_match.distances);
+                    best_match.Add("Threshold", closest_match.dist_threshold);
+                    best_match.Add("MaxDistance", closest_match.max_distance);
+                    best_match.Add("MinDistance", closest_match.min_distance);
+                    best_match.Add("AvgDistance", closest_match.avg_distance);
+                    job_item_info.Add("BestMatch", best_match);
+                }
 
             }
             else
