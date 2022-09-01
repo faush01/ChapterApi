@@ -494,16 +494,17 @@ define(['mainTabsManager', 'dialogHelper'], function (
             // populate the job info
             const job_info_summary = view.querySelector("#job_info");
             var job_info_html = "<table>";
-            job_info_html += "<tr><td>Job Id</td><td>: " + job_info_data.Id + "</td></tr>";
+            //job_info_html += "<tr><td>Job Id</td><td>: " + job_info_data.Id + "</td></tr>";
             job_info_html += "<tr><td>Status</td><td>: " + job_info_data.Status + "</td></tr>";
             job_info_html += "<tr><td>Name</td><td>: " + job_info_data.Name + "</td></tr>";
             job_info_html += "<tr><td>Auto Insert</td><td>: " + job_info_data.AutoInsert + "</td></tr>";
             job_info_html += "<tr><td>Added</td><td>: " + job_info_data.Added + "</td></tr>";
             job_info_html += "<tr><td>Finished</td><td>: " + job_info_data.Finished + "</td></tr>";
             job_info_html += "<tr><td>Intros</td><td>: " + job_info_data.IntroCount + "</td></tr>";
-            job_info_html += "<tr><td>Items</td><td>: " + job_info_data.ItemCount + "</td></tr>";
+            //job_info_html += "<tr><td>Items</td><td>: " + job_info_data.ItemCount + "</td></tr>";
+            job_info_html += "<tr><td>Threshold</td><td>: " + job_info_data.Threshold + "</td></tr>";
             
-            job_info_html += "<tr><td>Keep For</td><td>: " + job_info_data.KeepFor + "</td></tr>";
+            //job_info_html += "<tr><td>Keep For</td><td>: " + job_info_data.KeepFor + "</td></tr>";
             job_info_html += "<tr><td>Remove In</td><td>: " + job_info_data.RemoveIn + "</td></tr>";
             job_info_html += "</table>";
             job_info_summary.innerHTML = job_info_html;

@@ -78,7 +78,8 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
             const process_added_items = view.querySelector('#process_added_items');
             process_added_items.checked = config.ProcessAddedItems;
-            
+
+            view.querySelector('#detection_threshold').value = config.DetectionThreshold;
         });
 
         var url = "chapter_api/intro_data_stats?stamp=" + new Date().getTime();
@@ -126,9 +127,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
                 loaded_intro_data_list.appendChild(tr);
             }
-
         });
-
     }
 
     function UpdateDataUrl(text_box) {
@@ -208,6 +207,23 @@ define(['mainTabsManager', 'dialogHelper'], function (
         });
     }
 
+    function UpdateDetectionThreshold(text_box) {
+        ApiClient.getNamedConfiguration("chapter_api").then(function (config) {
+            console.log("Config Options : " + JSON.stringify(config));
+
+            let threshold = parseFloat(text_box.value);
+
+            if (threshold && threshold > 0.0 && threshold < 1.0) {
+                config.DetectionThreshold = threshold;
+                text_box.value = threshold;
+                ApiClient.updateNamedConfiguration("chapter_api", config);
+            }
+            else {
+                text_box.value = config.DetectionThreshold;
+            }
+        });
+    }
+
     return function (view, params) {
 
         // init code here
@@ -239,6 +255,10 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
             view.querySelector('#process_added_items').addEventListener("change", function () {
                 ProcessAddedChanged(this);
+            });
+            
+            view.querySelector('#detection_threshold').addEventListener("change", function () {
+                UpdateDetectionThreshold(this);
             });
 
         });

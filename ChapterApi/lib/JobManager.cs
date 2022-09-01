@@ -55,6 +55,7 @@ namespace ChapterApi
         public string ffmpeg_path { get; set; }
         public string message { get; set; }
         public bool auto_insert { get; set; } = false;
+        public double threshold { set; get; } = 0.5;
     }
 
     public class DetectionJobItem
@@ -280,7 +281,7 @@ namespace ChapterApi
                 }
 
                 // detect introes
-                detector.ProcessJobItem(item, job.intro_info_list);
+                detector.ProcessJobItem(item, job.intro_info_list, job.threshold);
                 item.status = JobItemStatus.Complete;
 
                 // insert detected chapters

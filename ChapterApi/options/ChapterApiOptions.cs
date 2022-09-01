@@ -24,6 +24,7 @@ namespace ChapterApi.options
     {
         public bool ProcessAddedItems { get; set; } = false;
         public int KeepFinishdJobFor { get; set; } = 24;
+        public double DetectionThreshold { get; set; } = 0.5;
         public string IntroDataPath { set; get; }
         public string IntroDataExternalUrl { set; get; } = "https://themeservice.azurewebsites.net/Home/Search?download=true";
     }

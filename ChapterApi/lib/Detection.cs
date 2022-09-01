@@ -35,7 +35,7 @@ namespace ChapterApi
             _logger = log;
         }
 
-        public void ProcessJobItem(DetectionJobItem job_item, List<IntroInfo> intro_info_list)
+        public void ProcessJobItem(DetectionJobItem job_item, List<IntroInfo> intro_info_list, double threshold)
         {
             Stopwatch stop_watch_total = new Stopwatch();
             stop_watch_total.Start();
@@ -73,7 +73,7 @@ namespace ChapterApi
             job_item.detection_result_list = new List<DetectionResult>();
             foreach (IntroInfo intro in intro_info_list)
             {
-                DetectionResult result = FindBestOffset(episode_cp_data, duration, intro.cp_data_bytes);
+                DetectionResult result = FindBestOffset(episode_cp_data, duration, intro.cp_data_bytes, threshold);
                 if (result != null)
                 {
                     result.intro_info = intro;
@@ -165,7 +165,8 @@ namespace ChapterApi
         private DetectionResult FindBestOffset(
             byte[] episode_cp_bytes,
             TimeSpan duration,
-            byte[] theme_cp_bytes)
+            byte[] theme_cp_bytes,
+            double threshold)
         {
             DetectionResult result = new DetectionResult();
 
@@ -180,7 +181,7 @@ namespace ChapterApi
 
             List<uint> distances = GetDistances(episode_cp_uints, theme_cp_uints);
             result.distances = distances;
-            int? best_start_offset = GetBestOffset(distances, result);
+            int? best_start_offset = GetBestOffset(distances, result, threshold);
 
             if (best_start_offset == null)
             {
@@ -222,7 +223,7 @@ namespace ChapterApi
             return result;
         }
 
-        private int? GetBestOffset(List<uint> distances, DetectionResult result)
+        private int? GetBestOffset(List<uint> distances, DetectionResult result, double threshold)
         {
             uint sum_distances = 0;
             uint min_dist = uint.MaxValue;
@@ -243,7 +244,7 @@ namespace ChapterApi
             }
 
             double average_distance = sum_distances / distances.Count;
-            uint distance_threshold = (uint)(average_distance * 0.5);  // TODO: find a good threshold
+            uint distance_threshold = (uint)(average_distance * threshold);
 
             result.sum_distance = sum_distances;
             result.max_distance = max_dist;

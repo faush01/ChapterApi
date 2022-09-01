@@ -451,6 +451,7 @@ namespace ChapterApi
                 job_info.Add("Added", job.added.ToString("yyyy-MM-dd HH:mm:ss"));
                 job_info.Add("ItemCount", job.items.Count);
                 job_info.Add("IntroCount", job.intro_info_list.Count);
+                job_info.Add("Threshold", job.threshold);
 
                 job_info.Add("KeepFor", job.keep_finished_for);
                 if(job.finished != null)
@@ -656,6 +657,8 @@ namespace ChapterApi
             // set the keep for based on options
             ChapterApiOptions config = _config.GetReportPlaybackOptions();
             job.keep_finished_for = config.KeepFinishdJobFor;
+
+            job.threshold = config.DetectionThreshold;
 
             string series_name = "";
 

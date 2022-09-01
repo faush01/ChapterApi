@@ -189,10 +189,11 @@ namespace ChapterApi
             DetectionJob job = new DetectionJob();
             job.ffmpeg_path = _ffmpeg.FfmpegConfiguration.EncoderPath;
             job.intro_info_list = intro_cp_info_items;
-            job.auto_insert = false;
+            job.auto_insert = true;
 
             ChapterApiOptions config = _config.GetReportPlaybackOptions();
             job.keep_finished_for = config.KeepFinishdJobFor;
+            job.threshold = config.DetectionThreshold;
 
             string series_name = "";
             foreach (Episode episode in episodes)
