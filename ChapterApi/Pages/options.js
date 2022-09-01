@@ -89,6 +89,44 @@ define(['mainTabsManager', 'dialogHelper'], function (
             let message_string = loaded_stats.SeriesCount + " series " + loaded_stats.ItemCount + " items";
             const loaded_intro_data_label = view.querySelector("#loaded_intro_data_label");
             loaded_intro_data_label.innerHTML = message_string;
+
+            const loaded_intro_data_list = view.querySelector("#loaded_intro_data_list");
+            while (loaded_intro_data_list.firstChild) {
+                loaded_intro_data_list.removeChild(loaded_intro_data_list.firstChild);
+            }
+
+            let row_count = 0;
+            for (const intro_item of loaded_stats.IntroItems) {
+                var tr = document.createElement("tr");
+                var td = null;
+
+                td = document.createElement("td");
+                td.appendChild(document.createTextNode(intro_item.imdb));
+                tr.appendChild(td);
+
+                td = document.createElement("td");
+                td.appendChild(document.createTextNode(intro_item.series));
+                tr.appendChild(td);
+
+                td = document.createElement("td");
+                td.appendChild(document.createTextNode(intro_item.extract));
+                tr.appendChild(td);
+
+                td = document.createElement("td");
+                td.appendChild(document.createTextNode(intro_item.md5));
+                tr.appendChild(td);
+
+                if (row_count % 2 === 0) {
+                    tr.style.backgroundColor = "#77FF7730";
+                }
+                else {
+                    tr.style.backgroundColor = "#7777FF30";
+                }
+                row_count++;
+
+                loaded_intro_data_list.appendChild(tr);
+            }
+
         });
 
     }

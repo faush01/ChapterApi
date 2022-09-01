@@ -8,6 +8,13 @@
             <table>
 
                 <tr>
+                    <td>Process New Episodes</td>
+                    <td>
+                        <input type="checkbox" id="process_added_items" /> Auto process episodes when they are added
+                    </td>
+                </tr>
+
+                <tr>
                     <td>Keep finished jobs for</td>
                     <td>
                         <select id="keep_for">
@@ -44,16 +51,22 @@
                 </tr>
 
                 <tr>
-                    <td>Loaded Intro Data</td>
+                    <td></td>
                     <td>
+                        <h4>Intro Data Loaded</h4>
                         <span id="loaded_intro_data_label"></span>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>Process New Episodes</td>
-                    <td>
-                        <input type="checkbox" id="process_added_items" /> Auto process episodes when they are added
+                        <table cellpadding="4">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">Imdb</th>
+                                    <th style="text-align: left;">Series</th>
+                                    <th style="text-align: left;">Extract</th>
+                                    <th style="text-align: left;">MD5</th>
+                                </tr>
+                            <thead>
+                            <tbody id="loaded_intro_data_list">
+                            </tbody>
+                        </table>
                     </td>
                 </tr>
 
