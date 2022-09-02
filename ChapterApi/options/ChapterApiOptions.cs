@@ -23,6 +23,7 @@ namespace ChapterApi.options
     public class ChapterApiOptions
     {
         public bool ProcessAddedItems { get; set; } = false;
+        public bool ProcessUpdatedItems { get; set; } = false;
         public int KeepFinishdJobFor { get; set; } = 24;
         public double DetectionThreshold { get; set; } = 0.5;
         public string IntroDataPath { set; get; }

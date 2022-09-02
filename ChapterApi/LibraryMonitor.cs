@@ -30,7 +30,7 @@ namespace ChapterApi
         private readonly IServerConfigurationManager _config;
 
         private readonly object _syncLock = new object();
-        private readonly List<long> _episodesAdded = new List<long>();
+        private readonly HashSet<long> _episodesAdded = new HashSet<long>();
         private Timer _updateTimer = null;
         private const int _updateDuration = 60000;
 
@@ -56,34 +56,58 @@ namespace ChapterApi
         {
             _logger.Info("Adding Add Item Event Monitor");
             _libraryManager.ItemAdded += ItemAdded;
+            _libraryManager.ItemUpdated += ItemUpdated;
         }
 
         public void Dispose()
         {
+            _libraryManager.ItemAdded -= ItemAdded;
+            _libraryManager.ItemUpdated -= ItemUpdated;
+
             if (_updateTimer != null)
             {
                 _updateTimer.Dispose();
                 _updateTimer = null;
             }
+        }
 
-            _libraryManager.ItemAdded -= ItemAdded;
+        void ItemUpdated(object sender, ItemChangeEventArgs e)
+        {
+            BaseItem item = e.Item;
+            if (item == null || item.GetType() != typeof(Episode) || item.IsVirtualItem)
+            {
+                return;
+            }
+
+            ChapterApiOptions config = _config.GetReportPlaybackOptions();
+            if (config.ProcessUpdatedItems == false)
+            {
+                return;
+            }
+
+            ProcessEpisodeEvent(item);
         }
 
         void ItemAdded(object sender, ItemChangeEventArgs e)
         {
-            ChapterApiOptions config = _config.GetReportPlaybackOptions();
-            if(config.ProcessAddedItems == false)
-            {
-                return;
-            }
-
-            _logger.Info("Item Added");
-
             BaseItem item = e.Item;
-            if(item.GetType() != typeof(Episode))
+            if (item == null || item.GetType() != typeof(Episode) || item.IsVirtualItem)
             {
                 return;
             }
+
+            ChapterApiOptions config = _config.GetReportPlaybackOptions();
+            if (config.ProcessAddedItems == false)
+            {
+                return;
+            }
+
+            ProcessEpisodeEvent(item);
+        }
+
+        private void ProcessEpisodeEvent(BaseItem item)
+        {
+            _logger.Info("Episode Event : " + item.InternalId);
 
             lock (_syncLock)
             {
@@ -117,32 +141,37 @@ namespace ChapterApi
             }
         }
 
-        Dictionary<string, List<Episode>> GroupItems(List<long> item_ids)
+        Dictionary<string, List<Episode>> GroupItems(HashSet<long> item_ids)
         {
             Dictionary<string, List<Episode>> grouped_items = new Dictionary<string, List<Episode>>();
             string imdb_name = MetadataProviders.Imdb.ToString();
 
+            _logger.Info("Grouping Items : " + string.Join(",", item_ids));
+
             foreach (long item_id in item_ids)
             {
                 BaseItem item = _libraryManager.GetItemById(item_id);
-                if (item.GetType() == typeof(Episode))
+                if (item != null && item.GetType() == typeof(Episode))
                 {
                     Episode episode = item as Episode;
-                    string imdb_id = null;
-                    if (episode.Series.ProviderIds.ContainsKey(imdb_name))
+                    if (episode != null && episode.Series != null && episode.Series.ProviderIds != null)
                     {
-                        imdb_id = episode.Series.ProviderIds[imdb_name];
-                    }
-                    imdb_id = imdb_id ?? "";
-                    imdb_id = imdb_id.Trim().ToLower();
-                    if(!string.IsNullOrEmpty(imdb_id))
-                    {
-                        // we have the imdb now add the epp
-                        if(grouped_items.ContainsKey(imdb_id) == false)
+                        string imdb_id = null;
+                        if (episode.Series.ProviderIds.ContainsKey(imdb_name))
                         {
-                            grouped_items.Add(imdb_id, new List<Episode>());
+                            imdb_id = episode.Series.ProviderIds[imdb_name];
                         }
-                        grouped_items[imdb_id].Add(episode);
+                        imdb_id = imdb_id ?? "";
+                        imdb_id = imdb_id.Trim().ToLower();
+                        if(!string.IsNullOrEmpty(imdb_id))
+                        {
+                            // we have the imdb now add the epp
+                            if(grouped_items.ContainsKey(imdb_id) == false)
+                            {
+                                grouped_items.Add(imdb_id, new List<Episode>());
+                            }
+                            grouped_items[imdb_id].Add(episode);
+                        }
                     }
                 }
             }

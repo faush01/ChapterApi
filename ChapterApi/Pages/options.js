@@ -67,18 +67,11 @@ define(['mainTabsManager', 'dialogHelper'], function (
         ApiClient.getNamedConfiguration("chapter_api").then(function (config) {
             console.log("Config Options : " + JSON.stringify(config));
 
-            const keep_for_options = view.querySelector("#keep_for");
-            keep_for_options.value = config.KeepFinishdJobFor;
-
-            const intro_data_path_label = view.querySelector('#intro_data_path_label');
-            intro_data_path_label.innerHTML = config.IntroDataPath;
-
-            const intro_data_url_label = view.querySelector('#input_data_url');
-            intro_data_url_label.value = config.IntroDataExternalUrl;
-
-            const process_added_items = view.querySelector('#process_added_items');
-            process_added_items.checked = config.ProcessAddedItems;
-
+            view.querySelector("#keep_for").value = config.KeepFinishdJobFor;
+            view.querySelector('#intro_data_path_label').innerHTML = config.IntroDataPath;
+            view.querySelector('#input_data_url').value = config.IntroDataExternalUrl;
+            view.querySelector('#process_added_items').checked = config.ProcessAddedItems;
+            view.querySelector('#process_updated_items').checked = config.ProcessUpdatedItems;
             view.querySelector('#detection_threshold').value = config.DetectionThreshold;
         });
 
@@ -200,9 +193,15 @@ define(['mainTabsManager', 'dialogHelper'], function (
     function ProcessAddedChanged(checkbox) {
         ApiClient.getNamedConfiguration("chapter_api").then(function (config) {
             console.log("Config Options : " + JSON.stringify(config));
-
             config.ProcessAddedItems = checkbox.checked;
+            ApiClient.updateNamedConfiguration("chapter_api", config);
+        });
+    }
 
+    function ProcessUpdatedChanged(checkbox) {
+        ApiClient.getNamedConfiguration("chapter_api").then(function (config) {
+            console.log("Config Options : " + JSON.stringify(config));
+            config.ProcessUpdatedItems = checkbox.checked;
             ApiClient.updateNamedConfiguration("chapter_api", config);
         });
     }
@@ -256,7 +255,11 @@ define(['mainTabsManager', 'dialogHelper'], function (
             view.querySelector('#process_added_items').addEventListener("change", function () {
                 ProcessAddedChanged(this);
             });
-            
+
+            view.querySelector('#process_updated_items').addEventListener("change", function () {
+                ProcessUpdatedChanged(this);
+            });
+
             view.querySelector('#detection_threshold').addEventListener("change", function () {
                 UpdateDetectionThreshold(this);
             });

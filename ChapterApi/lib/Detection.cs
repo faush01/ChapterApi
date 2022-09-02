@@ -165,15 +165,15 @@ namespace ChapterApi
             // this is a table I came up with that takes into account small CP extraction byte differences
             // the smaller the extract the more bytes are dropped in the total length
             // to be able to use the bytes number in the duration calculation you need to account for that
-            if (byte_len < 884) return 81; // 15sec
-            else if (byte_len < 1852) return 77; //30sec
-            else if (byte_len < 2820) return 70; //60sec
-            else if (byte_len < 3792) return 64; //90sec
-            else if (byte_len < 4765) return 54; //120sec
-            else if (byte_len < 5737) return 39; //150sec
-            else if (byte_len < 6709) return 28; //180sec
-            else if (byte_len < 7681) return 17; //210sec
-            else if (byte_len < 8653) return 7; //240sec
+            if (byte_len < 884) return 83; // 15sec
+            else if (byte_len < 1852) return 79; //30sec
+            else if (byte_len < 2820) return 72; //60sec
+            else if (byte_len < 3792) return 66; //90sec
+            else if (byte_len < 4765) return 56; //120sec
+            else if (byte_len < 5737) return 41; //150sec
+            else if (byte_len < 6709) return 30; //180sec
+            else if (byte_len < 7681) return 19; //210sec
+            else if (byte_len < 8653) return 9; //240sec
             else return 0;
         }
 
@@ -227,7 +227,7 @@ namespace ChapterApi
             double theme_start = (best_start_offset.Value * 4) / bytes_per_sec;
             TimeSpan ts_start = TimeSpan.FromSeconds(theme_start);
 
-            int len_correction = GetByteLenthCorrection(theme_cp_bytes.Length) + 2;
+            int len_correction = GetByteLenthCorrection(theme_cp_bytes.Length);
             _logger.Info("Intro Byte Len : " + theme_cp_bytes.Length + " correction : " + len_correction);
             int theme_data_len = theme_cp_bytes.Length + len_correction; 
             double theme_end = theme_start + (theme_data_len / bytes_per_sec);
