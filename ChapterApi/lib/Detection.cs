@@ -19,8 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
-using System.Threading;
 
 namespace ChapterApi
 {
@@ -162,6 +160,23 @@ namespace ChapterApi
             return chroma_bytes;
         }
 
+        private int GetByteLenthCorrection(int byte_len)
+        {
+            // this is a table I came up with that takes into account small CP extraction byte differences
+            // the smaller the extract the more bytes are dropped in the total length
+            // to be able to use the bytes number in the duration calculation you need to account for that
+            if (byte_len < 884) return 81; // 15sec
+            else if (byte_len < 1852) return 77; //30sec
+            else if (byte_len < 2820) return 70; //60sec
+            else if (byte_len < 3792) return 64; //90sec
+            else if (byte_len < 4765) return 54; //120sec
+            else if (byte_len < 5737) return 39; //150sec
+            else if (byte_len < 6709) return 28; //180sec
+            else if (byte_len < 7681) return 17; //210sec
+            else if (byte_len < 8653) return 7; //240sec
+            else return 0;
+        }
+
         private DetectionResult FindBestOffset(
             byte[] episode_cp_bytes,
             TimeSpan duration,
@@ -195,17 +210,27 @@ namespace ChapterApi
             // based on the options used in the ffmpeg audio mixing and cp muxing
             // TODO: this need further investigation
             // https://github.com/acoustid/chromaprint/issues/45
+            //(duration_in_seconds * 11025 - 4096) / 1365 - 15 - 4 + 1
+            //11025 = audio sampling rate
+            //4096 = one FFT window size
+            //1365 = increment of the moving FFT window
+            //15 = number of classifiers -1
+            //4 = number of coefficients in the chromagram smoothing filter -1
+            //(((seconds * 44100) - 4096) / 1365) - 15 - 4 + 1
             // double ints_per_sec = 8.06; // this is calculated by extracting a bunch of test data and comparing them
             // for now lets use the duration and extracted byte array length to calculate this 
-            double ints_per_sec = (episode_cp_bytes.Length / duration.TotalSeconds) / 4;
+            double bytes_per_sec = episode_cp_bytes.Length / duration.TotalSeconds;
 
             // also remember we are using int offsets, this is 4 bytes, we could get better
             // granularity by comparing bytes for byte and use actual byte offsets in our best match
 
-            double theme_start = best_start_offset.Value / ints_per_sec;
+            double theme_start = (best_start_offset.Value * 4) / bytes_per_sec;
             TimeSpan ts_start = TimeSpan.FromSeconds(theme_start);
 
-            double theme_end = theme_start + (theme_cp_uints.Count / ints_per_sec);
+            int len_correction = GetByteLenthCorrection(theme_cp_bytes.Length) + 2;
+            _logger.Info("Intro Byte Len : " + theme_cp_bytes.Length + " correction : " + len_correction);
+            int theme_data_len = theme_cp_bytes.Length + len_correction; 
+            double theme_end = theme_start + (theme_data_len / bytes_per_sec);
             TimeSpan ts_end = TimeSpan.FromSeconds(theme_end);
 
             result.start_time = ts_start.ToString(@"hh\:mm\:ss\.fff");
