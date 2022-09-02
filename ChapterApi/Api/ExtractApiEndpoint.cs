@@ -267,7 +267,7 @@ namespace ChapterApi
 
                 string json_string = GetJsonString(theme_data);
                 byte[] json_bytes = Encoding.UTF8.GetBytes(json_string);
-                responce = GetResponceObject(filename + ".json", "text/html; charset=UTF-8", json_bytes);
+                responce = GetResponceObject(filename + ".json", "application/json", json_bytes);
                 return responce;
             }
         }
