@@ -114,6 +114,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
                         td = document.createElement("td");
                         var intro_percent = (season.IntroCount / season.EpisodeCount) * 100;
                         var intro_text = season.IntroCount + " (" + Math.floor(intro_percent) + "%)";
+                        intro_text += " " + season.AvgIntro;
                         td.appendChild(document.createTextNode(intro_text));
                         tr.appendChild(td);
 

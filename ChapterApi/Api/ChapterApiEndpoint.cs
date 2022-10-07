@@ -150,6 +150,7 @@ namespace ChapterApi
             int episode_count = 0;
             int with_intro_count = 0;
             int with_credits_count = 0;
+            long total_duration = 0;
 
             foreach (BaseItem episode in episodes)
             {
@@ -178,6 +179,7 @@ namespace ChapterApi
                 if(intro_start != -1 && intro_end != -1 && intro_start < intro_end)
                 {
                     with_intro_count++;
+                    total_duration += intro_end - intro_start;
                 }
 
                 if(credits != -1)
@@ -189,6 +191,14 @@ namespace ChapterApi
             summary.Add("EpisodeCount", episode_count);
             summary.Add("IntroCount", with_intro_count);
             summary.Add("CreditsCount", with_credits_count);
+
+            long avg_intro = 0;
+            if (with_intro_count > 0)
+            {
+                avg_intro = total_duration / with_intro_count;
+            }
+            TimeSpan avg_intro_ts = TimeSpan.FromTicks(avg_intro);
+            summary.Add("AvgIntro", avg_intro_ts.ToString(@"mm\:ss"));
 
             return summary;
         }
