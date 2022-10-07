@@ -103,11 +103,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
                 tr.appendChild(td);
 
                 td = document.createElement("td");
-                td.appendChild(document.createTextNode(intro_item.extract));
-                tr.appendChild(td);
-
-                td = document.createElement("td");
-                td.appendChild(document.createTextNode(intro_item.md5));
+                td.appendChild(document.createTextNode(intro_item.count));
                 tr.appendChild(td);
 
                 if (row_count % 2 === 0) {

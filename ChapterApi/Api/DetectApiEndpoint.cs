@@ -726,25 +726,24 @@ namespace ChapterApi
             Dictionary<string, object> intro_data_stats = new Dictionary<string, object>();
 
             Dictionary<string, List<IntroInfo>> intro_data = _jm.GetIntroData();
-
-            List<Dictionary<string, object>> intro_data_list = new List<Dictionary<string, object>>();
             int item_count = 0;
             int series_count = 0;
+
+            List<Dictionary<string, object>> intro_data_list = new List<Dictionary<string, object>>();
             foreach (string key in intro_data.Keys)
             {
-                
+                List<IntroInfo> intros = intro_data[key];
                 series_count++;
-                foreach (IntroInfo info in intro_data[key])
+
+                if(intros.Count > 0)
                 {
+                    IntroInfo first = intros[0];
                     Dictionary<string, object> intro_data_item = new Dictionary<string, object>();
-
-                    intro_data_item.Add("imdb", info.imdb);
-                    intro_data_item.Add("series", info.series);
-                    intro_data_item.Add("extract", info.extract);
-                    intro_data_item.Add("md5", info.cp_data_md5);
-
+                    intro_data_item.Add("imdb", key);
+                    intro_data_item.Add("series", first.series);
+                    intro_data_item["count"] = intros.Count;
                     intro_data_list.Add(intro_data_item);
-                    item_count++;
+                    item_count += intros.Count;
                 }
             }
 
