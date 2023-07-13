@@ -628,6 +628,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
                             link.style.color = "inherit";
                             var export_link = "chapter_api/extract_theme?id=" + episode.Id;
                             export_link += "&type=1";
+                            export_link += "&api_key=" + ApiClient._serverInfo.AccessToken;
                             export_link += "&stamp=" + new Date().getTime();
                             export_link = ApiClient.getUrl(export_link);
                             link.href = export_link;
@@ -644,6 +645,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
                             link.style.color = "inherit";
                             export_link = "chapter_api/extract_theme?id=" + episode.Id;
                             export_link += "&type=2";
+                            export_link += "&api_key=" + ApiClient._serverInfo.AccessToken;
                             export_link += "&stamp=" + new Date().getTime();
                             export_link = ApiClient.getUrl(export_link);
                             link.href = export_link;

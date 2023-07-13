@@ -2,8 +2,8 @@
 
 <PropertyGroup> 
   <TargetFrameworks>netstandard2.0;</TargetFrameworks> 
-  <AssemblyVersion>1.3.0.7</AssemblyVersion> 
-  <FileVersion>1.3.0.7</FileVersion> </PropertyGroup>
+  <AssemblyVersion>1.3.0.8</AssemblyVersion> 
+  <FileVersion>1.3.0.8</FileVersion> </PropertyGroup>
 
 <ItemGroup>
   <None Remove="Media\logo.png" />

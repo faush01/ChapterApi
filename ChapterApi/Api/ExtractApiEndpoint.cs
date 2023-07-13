@@ -41,7 +41,7 @@ namespace ChapterApi
 {
     // http://localhost:8096/emby/chapter_api/extract_theme
     [Route("/chapter_api/extract_theme", "GET", Summary = "Extract the Theme chromaprint")]
-    //[Authenticated]
+    [Authenticated]
     public class ExtractTheme : IReturn<Object>
     {
         [ApiMember(Name = "id", Description = "item id", IsRequired = true, DataType = "int", ParameterType = "query", Verb = "GET")]
