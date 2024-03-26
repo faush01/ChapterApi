@@ -80,6 +80,23 @@ define(['mainTabsManager', 'dialogHelper'], function (
         });
     }
 
+    function GetToken() {
+
+        return ApiClient.accessToken();
+
+        /*
+        let user_id = ApiClient._serverInfo.UserId;
+        let token = "";
+        for (let index = 0; index < ApiClient._serverInfo.Users.length; index++) {
+            if (ApiClient._serverInfo.Users[index].UserId == user_id) {
+                token = ApiClient._serverInfo.Users[index].AccessToken;
+            }
+        }
+        console.log("ApiKey Found : " + token + " for user : " + user_id);
+        return token;
+        */
+    }
+
     function GetVideoUrl(item_id, startTime, playing_session_id) {
         var url = "Videos/" + item_id + "/stream.mp4";
         url += "?StartTimeTicks=" + startTime;
@@ -101,7 +118,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
         //url += "&h264-level=52";
         //url += "&TranscodeReasons=AudioCodecNotSupported,DirectPlayError";
         url += "&PlaySessionId=" + playing_session_id; 
-        url += "&api_key=" + ApiClient._serverInfo.AccessToken;
+        url += "&api_key=" + GetToken();
         url += "&n=" + new Date().getTime();
         var url = ApiClient.getUrl(url);
         return url;
@@ -462,7 +479,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
                     i.className = "md-icon";
                     i.style.fontSize = "25px";
                     i.style.cursor = "pointer";
-                    i.appendChild(document.createTextNode("play_circle_outline"));
+                    i.appendChild(document.createTextNode(""));
                     i.addEventListener("click", function () { PlayChapter(view, item_info, chapter); });
                     td.appendChild(i);
 
@@ -628,7 +645,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
                             link.style.color = "inherit";
                             var export_link = "chapter_api/extract_theme?id=" + episode.Id;
                             export_link += "&type=1";
-                            export_link += "&api_key=" + ApiClient._serverInfo.AccessToken;
+                            export_link += "&api_key=" + GetToken();
                             export_link += "&stamp=" + new Date().getTime();
                             export_link = ApiClient.getUrl(export_link);
                             link.href = export_link;
@@ -645,7 +662,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
                             link.style.color = "inherit";
                             export_link = "chapter_api/extract_theme?id=" + episode.Id;
                             export_link += "&type=2";
-                            export_link += "&api_key=" + ApiClient._serverInfo.AccessToken;
+                            export_link += "&api_key=" + GetToken();
                             export_link += "&stamp=" + new Date().getTime();
                             export_link = ApiClient.getUrl(export_link);
                             link.href = export_link;
