@@ -18,6 +18,7 @@ using MediaBrowser.Model.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 
 namespace ChapterApi
@@ -101,7 +102,7 @@ namespace ChapterApi
             stop_watch_total.Stop();
             TimeSpan ts = stop_watch_total.Elapsed;
             job_item.job_total_time = ts.TotalMilliseconds;
-            job_item.job_duration = ts.TotalSeconds.ToString("#.000");
+            job_item.job_duration = ts.TotalSeconds.ToString("#.000", CultureInfo.InvariantCulture);
 
             _logger.Info("ProcessJobItem Extract Time : " + job_item.job_extract_time);
             _logger.Info("ProcessJobItem Detect Time  : " + job_item.job_detect_time);
@@ -117,7 +118,7 @@ namespace ChapterApi
             command_params.Add("-accurate_seek");
             command_params.Add("-i \"" + media_path + "\"");
             //command_params.Add(string.Format("-ss {0}", ts_start.TotalSeconds));
-            command_params.Add(string.Format("-t {0}", ts_duration.TotalSeconds));
+            command_params.Add(string.Format("-t {0}", ts_duration.TotalSeconds.ToString(CultureInfo.InvariantCulture)));
             command_params.Add("-ac 1");
             command_params.Add("-acodec pcm_s16le");
             command_params.Add("-ar 44100");

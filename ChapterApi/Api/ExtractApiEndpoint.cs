@@ -285,8 +285,8 @@ namespace ChapterApi
 
             command_params.Add("-accurate_seek");
             command_params.Add("-i \"" + media_path + "\"");
-            command_params.Add(string.Format("-ss {0}", ts_start.TotalSeconds.ToString(CultureInfo.CreateSpecificCulture("en-US"))));
-            command_params.Add(string.Format("-t {0}", ts_duration.TotalSeconds.ToString(CultureInfo.CreateSpecificCulture("en-US"))));
+            command_params.Add(string.Format("-ss {0}", ts_start.TotalSeconds.ToString(CultureInfo.InvariantCulture)));
+            command_params.Add(string.Format("-t {0}", ts_duration.TotalSeconds.ToString(CultureInfo.InvariantCulture)));
             command_params.Add("-ac 1");
             command_params.Add("-acodec pcm_s16le");
             command_params.Add("-ar 44100");
@@ -347,8 +347,8 @@ namespace ChapterApi
 
             command_params.Add("-accurate_seek");
             command_params.Add("-i \"" + media_path + "\"");
-            command_params.Add(string.Format("-ss {0}", ts_start.TotalSeconds.ToString(CultureInfo.CreateSpecificCulture("en-US"))));
-            command_params.Add(string.Format("-t {0}", ts_duration.TotalSeconds.ToString(CultureInfo.CreateSpecificCulture("en-US"))));
+            command_params.Add(string.Format("-ss {0}", ts_start.TotalSeconds.ToString(CultureInfo.InvariantCulture)));
+            command_params.Add(string.Format("-t {0}", ts_duration.TotalSeconds.ToString(CultureInfo.InvariantCulture)));
             command_params.Add("-ac 1");
             command_params.Add("-acodec pcm_s16le");
             command_params.Add("-ar 44100");
