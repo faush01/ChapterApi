@@ -122,12 +122,20 @@ namespace ChapterApi.lib
         public Dictionary<string, List<IntroInfo>> LoadIntroDataFromPath(DirectoryInfo data_path)
         {
             List<FileInfo> file_list = new List<FileInfo>();
-            WalkDir(data_path, file_list);
+            try
+            {
+                WalkDir(data_path, file_list);
+            }
+            catch(Exception e)
+            {
+                _logger.Error("Failed to load IntroInfo files from : " + data_path.FullName);
+            }
 
             // process the list of files
             List<IntroInfo> intro_data = new List<IntroInfo>();
             foreach (FileInfo fi in file_list)
             {
+                _logger.Info("Loading data from IntroFile : " + fi.FullName);
                 List<IntroInfo> loaded_intro_list = LoadIntroFileData(fi);
                 if (loaded_intro_list.Count > 0)
                 {
@@ -147,7 +155,7 @@ namespace ChapterApi.lib
                 if (name.EndsWith(".zip") || name.EndsWith(".json"))
                 {
                     fil.Add(fi);
-                    _logger.Info("Processing Intro File : " + fi.FullName);
+                    _logger.Debug("Found Intro File : " + fi.FullName);
                 }
             }
 
@@ -163,7 +171,7 @@ namespace ChapterApi.lib
             IntroInfo info = _jsonSerializer.DeserializeFromString(file_data, typeof(IntroInfo)) as IntroInfo;
             if(info != null)
             {
-                //_logger.Info("Adding info from json : " + info.series + " - " + info.imdb + " - " + info.cp_data_md5);
+                _logger.Debug("Adding info from json : " + info.series + " - " + info.imdb + " - " + info.cp_data_md5);
                 intro_items.Add(info);
             }
         }
@@ -185,7 +193,7 @@ namespace ChapterApi.lib
                             IntroInfo info = _jsonSerializer.DeserializeFromString(entry_data, typeof(IntroInfo)) as IntroInfo;
                             if (info != null)
                             {
-                                //_logger.Info("Adding info from zip : " + info.series + " - " + info.imdb + " - " + info.cp_data_md5);
+                                _logger.Debug("Adding info from zip : " + info.series + " - " + info.imdb + " - " + info.cp_data_md5);
                                 loaded_info_items.Add(info);
                             }
                         }
@@ -209,7 +217,14 @@ namespace ChapterApi.lib
             }
             else if (file_name.EndsWith(".zip"))
             {
-                LoadFromZipFile(intro_file, intro_list);
+                try
+                {
+                    LoadFromZipFile(intro_file, intro_list);
+                }
+                catch (Exception e)
+                {
+                    _logger.Error("Error loading IntoData from ZIP (" + intro_file.FullName + ") - " + e.Message);
+                }
             }
 
             return intro_list;

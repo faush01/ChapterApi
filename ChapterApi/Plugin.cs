@@ -58,7 +58,15 @@ namespace ChapterApi
             _jm = JobManager.GetInstance(_logger, ir);
             _logger.Info("Plugin Loaded");
 
-            LoadIntroData(config, applicationPaths, jsonSerializer);
+            try
+            {
+                LoadIntroData(config, applicationPaths, jsonSerializer);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Failed to load IntroInfo data : " + ex.Message);
+            }
+            
         }
 
         private void LoadIntroData(IServerConfigurationManager config, IApplicationPaths applicationPaths, IJsonSerializer jsonSerializer)
