@@ -335,6 +335,7 @@ namespace ChapterApi
                 item_path.Insert(0, pi);
 
                 item = item.GetParent();
+                _logger.Info("AddingCollectionItem:" + item.Name + "(" + item.InternalId + "," + item.IsTopParent + "," + item.IsResolvedToFolder + ")");
 
                 pi = new Dictionary<string, object>();
                 pi.Add("Name", item.Name);
@@ -395,7 +396,17 @@ namespace ChapterApi
                     }
                     else if (item.GetType() == typeof(CollectionFolder))
                     {
-                        query.IncludeItemTypes = new string[] { "MusicAlbum", "Movie", "Series" };
+                        CollectionFolder f = (CollectionFolder)item;
+                        if(f.CollectionType == "movies")
+                        {
+                            query.IncludeItemTypes = new string[] { "Movie" };
+                        }
+                        else if(f.CollectionType == "tvshows")
+                        {
+                            query.IncludeItemTypes = new string[] { "Series" };
+                        }
+
+                        //query.IncludeItemTypes = new string[] { "Movie", "Series" };
                         query.Recursive = true;
                     }
                     else if (item.GetType() == typeof(Series))
@@ -414,7 +425,7 @@ namespace ChapterApi
             }
             else if (!string.IsNullOrEmpty(request.filter))
             {
-                query.IncludeItemTypes = new string[] { "MusicAlbum", "Movie", "Series" };
+                query.IncludeItemTypes = new string[] { "Movie", "Series" };
                 query.SearchTerm = request.filter;
             }
             else
@@ -425,6 +436,7 @@ namespace ChapterApi
 
             BaseItem[] results = _libraryManager.GetItemList(query);
 
+            List<string> included_collections_types = new List<string>() { "movies", "tvshows" };
             foreach (BaseItem item in results)
             {
                 //_logger.Info(item.Name + "(" + item.InternalId + ")");
@@ -433,6 +445,16 @@ namespace ChapterApi
                 info.Add("Name", item.Name);
                 info.Add("SortName", item.SortName);
                 info.Add("ItemType", item.GetType().Name);
+
+                if (item.GetType() == typeof(CollectionFolder))
+                {
+                    CollectionFolder f = (CollectionFolder)item;
+                    info.Add("CollectionType", f.CollectionType);
+                    if(!included_collections_types.Contains(f.CollectionType))
+                    {
+                        continue;
+                    }
+                }
 
                 if (item.GetType() == typeof(Episode))
                 {

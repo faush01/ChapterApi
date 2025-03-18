@@ -368,7 +368,7 @@ define(['mainTabsManager', 'dialogHelper'], function (
 
                 // populate the item info
                 var display_item_info = view.querySelector('#display_item_info');
-                var item_display_info = "<strong>" + item_data.Name + "</strong><br>";
+                var item_display_info = "<h3 style='margin: 0px;'><strong>" + item_data.Name + "</strong></h3>";
                 item_display_info += item_data.ItemType + "<br>";
                 //item_display_info += "Item Id : " + item_data.Id + "<br>";
                 //item_display_info += "Series : " + item_data.Series + "<br>";
@@ -720,17 +720,27 @@ define(['mainTabsManager', 'dialogHelper'], function (
             for (const path_info of item_path_data) {
 
                 var span = document.createElement("span");
-                span.appendChild(document.createTextNode(path_info.Name));
+                let name = path_info.Name;
+                if (name == "Media Folders") name = "root";
+                span.appendChild(document.createTextNode("[" + name + "]"));
                 span.style.cursor = "pointer";
 
                 span.addEventListener("click", function () {
-                    var item_data = { Name: path_info.Name, Id: path_info.Id };
+                    var item_data = { Name: name, Id: path_info.Id };
                     PopulateSelector(view, item_data, "");
                     PopulateChapterInfo(view, item_data); 
                     PopulateSelectedPath(view, item_data);
                 });
 
-                path_string.appendChild(document.createTextNode("\\"));
+                span.addEventListener("mouseover", function (event) {
+                    event.target.style.textDecoration = "underline";
+                });
+
+                span.addEventListener("mouseout", function (event) {
+                    event.target.style.textDecoration = "none";
+                });
+
+                path_string.appendChild(document.createTextNode(" "));
                 path_string.appendChild(span);
 
             }
